@@ -7,4 +7,4 @@ this is almost identical to the matlab 2015b m-file spectrogram.m. I've removed 
 
 #wavread_2010a.m
 
-this is the unchanged matlab 2010a m-file for wavread. the goal is to look at how it reads in metadata of a wav file and if it is better or faster than audioinfo which seems to me to be very slow.
+changed to bare bones so that it only returns size.
