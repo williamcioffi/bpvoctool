@@ -7,7 +7,7 @@ pp = char(strcat(home, filesep, 'clip3_08E_d02_121227_213345.d100.x.wav'));
 
 
 %constants
-HALFWINDOW = 2 * fs; % one second forward one second back.
+HALFWINDOW = 2 * fs; % length of window forward from center of call and back from center of call
 
 % these will be the positions in running samples of the file.
 runningct = [];
