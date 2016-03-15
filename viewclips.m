@@ -1,7 +1,9 @@
-%change this to work with a single click instead and then just go to the
-%left and to the right to find the center then recenter.
+% changed to just check HALFWINDOW to left and right of where you click and then recenter.
+% should the 'looking' window be different from the final HALFWINDOW?
 
 home = '/Users/cioffi/Documents/developmentofbpvoctool/testclips';
+home = 'x:\bp_voc\tool_dev\testclips';
+
 pp = char(strcat(home, filesep, 'clip3_08E_d02_121227_213345.d100.x.wav'));
 [y fs] = audioread(pp);
 
@@ -13,7 +15,6 @@ HALFWINDOW = 2 * fs; % length of window forward from center of call and back fro
 runningct = [];
 runningst = [];
 runningen = [];
-runningcount = 0;
 
 nyq = fs / 2;
 nfft = 2^(ceil(log2(fs))-1);
@@ -34,6 +35,7 @@ yf = filtfilt(b, a, y);
 % colorbar off;
 % set(gca, 'YScale', 'log');
 
+runningcount = 1;
 done = 0;
 while ~done
     count = input('nclass (enter 0 when done) ?> ');
@@ -46,21 +48,22 @@ while ~done
         pt = nan(1, count);
 
         [a, b] = ginput(count);
-        runningcount = runningcount + count;
         
-        pt = floor(a * fs);
+        pt = floor(a * fs)';
         st = pt - HALFWINDOW;
         en = pt + HALFWINDOW - 1;
         
-        xx = [st   st   en   en  ] ./ fs;
+        xx = [st'   st'   en'   en'] ./ fs;
         yy = [f(1) f(2) f(2) f(1)];
         
-        hold on;
-        plot(xx, yy, 'k:');
-        hold off;
-        
         for i=1:count
-            text(xx(i, 2), yy(2), num2str(i), 'color', 'red');
+            text(xx(i, 2), yy(2), num2str(runningcount), 'color', 'red');
+            hold on;
+            plot(xx(i,:), yy, 'k:');
+            hold off;
+            
+            runningcount = runningcount + 1;
+            
             clip = st(i):en(i);
             peak = max(abs(yf(clip)));
             ct(i) = clip(find(abs(yf(clip)) == peak));
