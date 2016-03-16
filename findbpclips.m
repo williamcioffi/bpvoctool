@@ -16,18 +16,23 @@ f(2) = 30;
 [fnames, dirpath, nfiles] = openall();
 containsbp = zeros(1, nfiles);
 currentfile = 1;
-curname = '';
+curname = char(strcat(num2str(currentfile), '/', num2str(nfiles), ':', fnames(currentfile)));
+bpname = char(strcat('BP:', num2str(containsbp(currentfile))));
 
 
 % create and then hdie the ui as it is being constructed
-fig = figure('Visible', 'off', 'Position', [0, 0, 800, 400]);
-ha = axes('Units', 'pixels');
+fig = figure('Visible', 'off', 'Position', [0, 0, 900, 500]);
+ha = axes('Units', 'pixels', 'Position', [50,50,800,400]);
+ttext = uicontrol('Style', 'text', 'String', curname, 'Position',[20, 465, 400, 15]);
+btext = uicontrol('Style', 'text', 'String', bpname, 'Position', [800, 465, 60, 15]);
 
 fig.Units = 'normalized';
 ha.Units = 'normalized';
+ttext.Units = 'normalized';
+btext.Units = 'normalized';
 
 % assign the name to appear in the window title
-fig.Name = 'try this';
+fig.Name = '';
 
 % move the window to the center of the screen.
 movegui(fig, 'center');
@@ -62,13 +67,13 @@ function keypress_callback(~, eventdata)
             switch(containsbp(currentfile))
                 case 0
                     containsbp(currentfile) = 1;
-                    curname = char(strcat('BP...', fnames(currentfile)));
-                    fig.Name = curname;
                 case 1
                     containsbp(currentfile) = 0;
-                    curname = char(fnames(currentfile));
-                    fig.Name = curname;
             end
+            
+            updatename();
+        case 'x'
+            keyboard;
     end
     
     if(oldcurrentfile ~= currentfile)
@@ -77,17 +82,16 @@ function keypress_callback(~, eventdata)
 end
 
 function updatename()
-    switch(containsbp(currentfile))
-        case 1
-            curname = char(strcat('BP...', fnames(currentfile)));
-        case 0
-            curname = char(fnames(currentfile));
-    end
+    curname = char(strcat(num2str(currentfile), '/', num2str(nfiles), ':', fnames(currentfile)));
+    bpname = char(strcat('BP:', num2str(containsbp(currentfile))));
+    
+    %fig.Name = curname;
+    btext.String = bpname;
+    ttext.String = curname;
 end
 
 function [y, fs] = redraw()
     updatename();
-    fig.Name = curname;
     
     currentfilepath = char(strcat(dirpath, FILESEP, fnames(currentfile)));
     [y fs] = audioread(currentfilepath);
