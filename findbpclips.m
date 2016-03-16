@@ -4,6 +4,8 @@
 % are not
 % then go through only those clips that have bp and measure the interpulse
 % interval.
+% 	last updated: 16Mar2016
+%~wrc
 
 
 function findbyclips()
@@ -33,7 +35,7 @@ movegui(fig, 'center');
 % make the window visible
 fig.Visible = 'on';
 set(fig, 'KeyPressFcn', @keypress_callback);
-redraw();
+[y, fs] = redraw();
 
 
 % handle keypresses
@@ -42,6 +44,8 @@ function keypress_callback(~, eventdata)
     oldcurrentfile = currentfile;
     
     switch k
+        case 'm'
+            selectcalls(y, fs);
         case 'k'
             currentfile = currentfile + 1;
             if(currentfile > nfiles)
@@ -68,7 +72,7 @@ function keypress_callback(~, eventdata)
     end
     
     if(oldcurrentfile ~= currentfile)
-        redraw();
+        [y, fs] = redraw();
     end
 end
 
@@ -81,7 +85,7 @@ function updatename()
     end
 end
 
-function redraw()
+function [y, fs] = redraw()
     updatename();
     fig.Name = curname;
     
