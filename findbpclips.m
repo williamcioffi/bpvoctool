@@ -8,7 +8,7 @@
 %~wrc
 
 
-function findbyclips()
+function findbpclips()
 FILESEP = filesep;
 f(1) = 15;
 f(2) = 30;
