@@ -9,15 +9,22 @@
 
 
 function findbpclips()
+%some constants
 FILESEP = filesep;
 f(1) = 15;
 f(2) = 30;
 
-[fnames, dirpath, nfiles] = openall();
-containsbp = zeros(1, nfiles);
-currentfile = 1;
-curname = char(strcat(num2str(currentfile), '/', num2str(nfiles), ':', fnames(currentfile)));
-bpname = char(strcat('BP:', num2str(containsbp(currentfile))));
+%some finances
+curname = '';
+bpname = '';
+currentfile = -1;
+containsbp = 0;
+callpos = {};
+y = 0;
+fs = 0;
+nfiles = 0;
+dirpath = '';
+fnames = {};
 
 
 % create and then hdie the ui as it is being constructed
@@ -40,7 +47,6 @@ movegui(fig, 'center');
 % make the window visible
 fig.Visible = 'on';
 set(fig, 'KeyPressFcn', @keypress_callback);
-[y, fs] = redraw();
 
 
 % handle keypresses
@@ -49,8 +55,32 @@ function keypress_callback(~, eventdata)
     oldcurrentfile = currentfile;
     
     switch k
+        case 'f'
+            findfiles();
+        case 'o'
+            uiopen()
+            [y, fs] = redraw();
+        case 's'
+            uisave({'currentfile', 'containsbp', 'callpos', 'fnames', 'nfiles', 'dirpath', 'fs'}, 'savedsession');
+            
         case 'm'
-            selectcalls(y, fs);
+            callpos{currentfile} = selectcalls(y, fs);
+            
+        case 'g'
+            done = 0;
+            while ~done
+                index = input('go to file ?> ');
+                if(index > 0 & index <= nfiles)
+                    currentfile = index;
+                    if(currentfile ~= index)
+                        redraw();
+                    end
+                    done = 1;
+                else
+                    fprintf('please enter a number between 1 and %i\n', nfiles);
+                end
+            end
+                
         case 'k'
             currentfile = currentfile + 1;
             if(currentfile > nfiles)
@@ -104,4 +134,13 @@ function [y, fs] = redraw()
     set(gca, 'YScale', 'log');
     set(gca, 'YTick', [10 15 30 100 500 1000]);
 end
+
+function findfiles()        
+    [fnames, dirpath, nfiles] = openall();
+    containsbp = zeros(1, nfiles);
+    callpos = {};
+    currentfile = 1;
+    [y, fs] = redraw();
+end
+
 end
