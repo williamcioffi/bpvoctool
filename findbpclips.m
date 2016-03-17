@@ -4,7 +4,7 @@
 % are not
 % then go through only those clips that have bp and measure the interpulse
 % interval.
-% 	last updated: 16Mar2016
+% 	last updated: 17Mar2016
 %~wrc
 
 
@@ -25,6 +25,7 @@ fs = 0;
 nfiles = 0;
 dirpath = '';
 fnames = {};
+currentscale = 'log';
 
 
 % create and then hdie the ui as it is being constructed
@@ -102,6 +103,15 @@ function keypress_callback(~, eventdata)
             end
             
             updatename();
+        case 'i'
+            switch(currentscale)
+                case 'log'
+                    currentscale = 'linear';
+                case 'linear'
+                    currentscale = 'log';
+            end
+            
+            set(gca, 'YScale', currentscale);
         case 'x'
             keyboard;
     end
@@ -125,13 +135,13 @@ function [y, fs] = redraw()
     
     currentfilepath = char(strcat(dirpath, FILESEP, fnames(currentfile)));
     [y fs] = audioread(currentfilepath);
-    nfft = 2^(ceil(log2(fs))-1);
+    nfft = 2^(ceil(log2(fs))-2);
     win = hann(nfft);
     adv = nfft / 2;
     
     spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
 %   colorbar off;
-    set(gca, 'YScale', 'log');
+    set(gca, 'YScale', currentscale);
     set(gca, 'YTick', [10 15 30 100 500 1000]);
 end
 
