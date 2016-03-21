@@ -17,8 +17,10 @@ f(2) = 30;
 %some finances
 curname = '';
 bpname = '';
-currentfile = -1;
+baname = '';
+currentstretch = -1;
 containsbp = 0;
+containsba = 0;
 callpos = {};
 y = 0;
 fs = 0;
@@ -26,18 +28,25 @@ nfiles = 0;
 dirpath = '';
 fnames = {};
 currentscale = 'log';
+stretchst = [];
+stretchen = [];
+stretchsrc = [];
+stretchdst = [];
+nstretches = 0;
 
 
 % create and then hdie the ui as it is being constructed
 fig = figure('Visible', 'off', 'Position', [0, 0, 900, 500]);
 ha = axes('Units', 'pixels', 'Position', [50,50,800,400]);
-ttext = uicontrol('Style', 'text', 'String', curname, 'Position',[20, 465, 400, 15]);
+ttext = uicontrol('Style', 'text', 'String', curname, 'Position',[20, 465, 700, 15]);
 btext = uicontrol('Style', 'text', 'String', bpname, 'Position', [800, 465, 60, 15]);
+atext = uicontrol('Style', 'text', 'String', baname, 'Position', [730, 465, 60, 15]);
 
 fig.Units = 'normalized';
 ha.Units = 'normalized';
 ttext.Units = 'normalized';
 btext.Units = 'normalized';
+atext.Units = 'normalized';
 
 % assign the name to appear in the window title
 fig.Name = '';
@@ -53,7 +62,7 @@ set(fig, 'KeyPressFcn', @keypress_callback);
 % handle keypresses
 function keypress_callback(~, eventdata)
     k = eventdata.Key;
-    oldcurrentfile = currentfile;
+    oldcurrentfile = currentstretch;
     
     switch k
         case 'f'
@@ -62,44 +71,66 @@ function keypress_callback(~, eventdata)
             uiopen()
             [y, fs] = redraw();
         case 's'
-            uisave({'currentfile', 'containsbp', 'callpos', 'fnames', 'nfiles', 'dirpath', 'fs'}, 'savedsession');
+            uisave({'stretchst',        ...
+                    'stretchen',        ...
+                    'stretchsrc',       ...
+                    'nstretches',       ...
+                    'stretchdst',       ...
+                    'currentstretch',   ...
+                    'containsbp',       ...
+                    'containsba',       ...
+                    'callpos',          ...
+                    'fnames',           ...
+                    'nfiles',           ...
+                    'dirpath',          ...
+                    'fs'                ...
+                    }, 'savedsession');
             
         case 'm'
-            callpos{currentfile} = selectcalls(y, fs);
+            callpos{currentstretch} = selectcalls(y, fs);
             
         case 'g'
             done = 0;
             while ~done
                 index = input('go to file ?> ');
-                if(index > 0 & index <= nfiles)
-                    currentfile = index;
-                    if(currentfile ~= index)
+                if(index > 0 & index <= nstretches)
+                    currentstretch = index;
+                    if(currentstretch ~= index)
                         redraw();
                     end
                     done = 1;
                 else
-                    fprintf('please enter a number between 1 and %i\n', nfiles);
+                    fprintf('please enter a number between 1 and %i\n', nstretches);
                 end
             end
                 
         case 'k'
-            currentfile = currentfile + 1;
-            if(currentfile > nfiles)
-                currentfile = nfiles;
+            currentstretch = currentstretch + 1;
+            if(currentstretch > nstretches)
+                currentstretch = nstretches;
             end
             
         case 'j'
-            currentfile = currentfile - 1;
-            if(currentfile < 1)
-                currentfile = 1;
+            currentstretch = currentstretch - 1;
+            if(currentstretch < 1)
+                currentstretch = 1;
             end
             
         case 'b'
-            switch(containsbp(currentfile))
+            switch(containsbp(currentstretch))
                 case 0
-                    containsbp(currentfile) = 1;
+                    containsbp(currentstretch) = 1;
                 case 1
-                    containsbp(currentfile) = 0;
+                    containsbp(currentstretch) = 0;
+            end
+            
+            updatename();
+        case 'n'
+            switch(containsba(currentstretch))
+                case 0
+                    containsba(currentstretch) = 1;
+                case 1
+                    containsba(currentstretch) = 0;
             end
             
             updatename();
@@ -112,30 +143,53 @@ function keypress_callback(~, eventdata)
             end
             
             set(gca, 'YScale', currentscale);
+        case 'd'
+            if ~isempty(callpos)
+                lcp = length(callpos{currentstretch});
+            
+                if lcp ~= 0
+                   fprintf('deleted %i calls\n', lcp);
+                  callpos{currentstretch} = [];
+                else
+                    fprintf('no calls to delete!\n');
+                end
+            else
+                fprintf('no calls to delete!\n');
+            end
+                
         case 'x'
             keyboard;
     end
     
-    if(oldcurrentfile ~= currentfile)
+    if(oldcurrentfile ~= currentstretch)
         [y, fs] = redraw();
     end
 end
 
 function updatename()
-    curname = char(strcat(num2str(currentfile), '/', num2str(nfiles), ':', fnames(currentfile)));
-    bpname = char(strcat('BP:', num2str(containsbp(currentfile))));
+    curname = strcat(datestr(stretchdst(currentstretch), 0), '__',      ...
+                          num2str(currentstretch), '/',         ...
+                          num2str(nstretches), '__',            ...
+                          fnames(stretchsrc(currentstretch)));
+                      
+    bpname = char(strcat('BP:', num2str(containsbp(currentstretch))));
+    baname = char(strcat('BA:', num2str(containsba(currentstretch))));
     
     %fig.Name = curname;
     btext.String = bpname;
+    atext.String = baname;
     ttext.String = curname;
 end
 
 function [y, fs] = redraw()
     updatename();
     
-    currentfilepath = char(strcat(dirpath, FILESEP, fnames(currentfile)));
-    [y fs] = audioread(currentfilepath);
-    nfft = 2^(ceil(log2(fs))-2);
+    [y, fs] = loadstretch(stretchst(currentstretch), ...
+                         stretchen(currentstretch), ...
+                         stretchsrc(currentstretch, :), ...
+                         dirpath, fnames);
+                     
+    nfft = 2^(ceil(log2(fs))-1);
     win = hann(nfft);
     adv = nfft / 2;
     
@@ -147,9 +201,14 @@ end
 
 function findfiles()        
     [fnames, dirpath, nfiles] = openall();
-    containsbp = zeros(1, nfiles);
+    [stretchst, stretchen, stretchsrc, stretchdst] = loadxwavs(fnames, dirpath, nfiles);
+    nstretches = length(stretchst);
+    
+    containsbp = zeros(1, nstretches);
+    containsba = zeros(1, nstretches);
+    
     callpos = {};
-    currentfile = 1;
+    currentstretch = 1;
     [y, fs] = redraw();
 end
 
