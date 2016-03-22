@@ -1,4 +1,4 @@
-function [stretchst stretchen stretchsrc stretchdst] = loadxwavs(fnames, dirpath, nfiles)
+function [stretchst stretchen stretchsrc stretchdst stretchden] = loadxwavs(fnames, dirpath, nfiles)
 % loads a folder of xwavs and sets up stretches
 % still experimental so it has a dumb name change that later
 % only returns information about stretches right now but could easily be
@@ -75,7 +75,8 @@ nstretch = length(ustretch);
 stretchst = ustretch * NaN;
 stretchen = ustretch * NaN;
 stretchsrc = nan(nstretch, 2);
-stretchdst = nan(nstretch, 2);
+stretchdst = nan(nstretch, 1);
+stretchden = nan(nstretch, 1);
  
 for i=1:nstretch
      curstretch = find(stretch == ustretch(i));
@@ -84,6 +85,7 @@ for i=1:nstretch
      stretchsrc(i, 1) = srcfile(curstretch(1));
      stretchsrc(i, 2) = srcfile(curstretch(end));
      stretchdst(i) = dst(curstretch(1));
+     stretchden(i) = den(curstretch(end));
 end
 
 end
