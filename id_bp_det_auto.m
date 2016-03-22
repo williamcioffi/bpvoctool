@@ -1,19 +1,21 @@
 % take a list of detections and automatically identify those stretches as
 % bp included.
 
-%import 01A_det.csv
+%import 08E.csv
 %cols are smon sday syear shour smin ssec emon eday eyear ehour emin esec
 
-m = csvread('01A_det.csv', 2);
-smon    = m(:, 1);
-sday    = m(:, 2);
-syear   = m(:, 3);
+function [bp_positive] = id_bp_det_auto(readfile, stretchdst, stretchden)
+
+m = csvread(readfile, 2);
+syear   = m(:, 1);
+smon    = m(:, 2);
+sday    = m(:, 3);
 shour   = m(:, 4);
 smin    = m(:, 5);
 ssec    = m(:, 6);
-emon    = m(:, 7);
-eday    = m(:, 8);
-eyear   = m(:, 9);
+eyear   = m(:, 7);
+emon    = m(:, 8);
+eday    = m(:, 9);
 ehour   = m(:, 10);
 emin    = m(:, 11);
 esec    = m(:, 12);
@@ -24,9 +26,7 @@ eyear = eyear - 2000;
 dnumstdet = datenum(syear, smon, sday, shour, smin, ssec);
 dnumendet = datenum(eyear, emon, eday, ehour, emin, esec);
 
-[fnames, dirpath, nfiles] = openall();
-[stretchst, stretchen, stretchsrc, stretchdst, stretchden] = loadxwavs(fnames, dirpath, nfiles);
-nstretches = length(stretchst);
+nstretches = length(stretchdst);
 bp_positive = [];
 
 for i=1:length(dnumstdet)
@@ -41,7 +41,9 @@ for i=1:length(dnumstdet)
     timedifen(timedifen < 0) = NaN;
     en = find(min(abs(timedifen)) == abs(timedifen));
     
-    if ~isnan(st) | ~isnan(en)
+    if ~isnan(st) || ~isnan(en)
         bp_positive = [bp_positive st:en]; 
     end
+end
+
 end

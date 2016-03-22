@@ -1,14 +1,33 @@
-% this is a proto workflow for measuring the interpulse interval
-% first use chunckchecker to split up the clips
-% then go through each five minute clip and identify if there are bp there
-% are not
-% then go through only those clips that have bp and measure the interpulse
-% interval.
-% 	last updated: 17Mar2016
+function findbpclips()
+% FINDBPCLIPS this is a proto-app for measuring interpulse interval.
+% currently:
+%
+% f -- open a directory find all xwavs and split them into chuncks based on
+% contiuous stretches in duty cycled data. the current code does not deal
+% with continuous files.
+%
+% s -- save a .mat file of all information
+% o -- open a .mat file of all information
+%
+% m -- mark calls. looks from a second on either side of the click finds
+% the peak and saves that position in bppos{index};
+% d -- delete marked calls
+% q -- display marked calls
+%
+% g -- go to a particular chunck (by index)
+% hjkl h first l last j left k right
+% b -- mark a chunck as containing at least one bp 20hz call.
+% n -- mark a chunck as containing at least one ba train.
+% t -- load a file of times to mark those chuncks as bp.
+% p -- reduce down to just chuncks identified as having bp.
+%
+% i -- toggle the spectrogram display between log and linear.
+%
+% x -- enter debug mode.
+%
+%last updated: 22Mar2016
 %~wrc
 
-
-function findbpclips()
 %some constants
 FILESEP = filesep;
 f(1) = 15;
@@ -32,6 +51,7 @@ stretchst = [];
 stretchen = [];
 stretchsrc = [];
 stretchdst = [];
+stretchden = [];
 nstretches = 0;
 
 
@@ -65,6 +85,12 @@ function keypress_callback(~, eventdata)
     oldcurrentfile = currentstretch;
     
     switch k
+        case 'q'
+            if currentstretch <= length(callpos)
+                hold on;
+                plot(callpos{currentstretch}/fs, 20, '*');
+                hold off;
+            end
         case 'f'
             findfiles();
         case 'o'
@@ -88,7 +114,6 @@ function keypress_callback(~, eventdata)
             
         case 'm'
             callpos{currentstretch} = selectcalls(y, fs);
-            
         case 'g'
             done = 0;
             while ~done
@@ -134,6 +159,12 @@ function keypress_callback(~, eventdata)
             end
             
             updatename();
+        case 't'
+            % THIS DOES NO ERROR CHECKING FIX THAT LATER
+            [csvfilename, csvdirpath] = uigetfile(dirpath);
+            csvfilename = strcat(csvdirpath, FILESEP, csvfilename);
+            bp_pos_tmp =  id_bp_det_auto(csvfilename, stretchdst, stretchden);
+            containsbp(bp_pos_tmp) = 1;
         case 'i'
             switch(currentscale)
                 case 'log'
@@ -148,8 +179,9 @@ function keypress_callback(~, eventdata)
                 lcp = length(callpos{currentstretch});
             
                 if lcp ~= 0
-                   fprintf('deleted %i calls\n', lcp);
-                  callpos{currentstretch} = [];
+                    fprintf('deleted %i calls\n', lcp);
+                    callpos{currentstretch} = [];
+                    redraw();
                 else
                     fprintf('no calls to delete!\n');
                 end
@@ -159,6 +191,8 @@ function keypress_callback(~, eventdata)
                 
         case 'x'
             keyboard;
+        case 'p'
+            getjustbps();
     end
     
     if(oldcurrentfile ~= currentstretch)
@@ -199,9 +233,36 @@ function [y, fs] = redraw()
     set(gca, 'YTick', [10 15 30 100 500 1000]);
 end
 
+function getjustbps()
+    dese = find(containsbp == 1);
+    stretchst   = stretchst(dese);
+    stretchen   = stretchen(dese);
+    stretchsrc  = stretchsrc(dese, :);
+    stretchdst  = stretchdst(dese);
+    stretchden  = stretchden(dese);
+    
+    nstretches  = length(stretchst);
+    containsbp  = containsbp(dese);
+    containsba  = containsba(dese);
+    
+    if ~isempty(callpos)
+        highend = length(callpos);
+        dese2 = dese(dese < highend);
+        callpos = callpos{dese2};
+    end
+    
+    if any(currentstretch == dese)
+        currentstretch = find(currentstretch == dese);
+    else
+        currentstretch = 1;
+    end
+    
+    [y, fs] = redraw();
+end
+
 function findfiles()        
     [fnames, dirpath, nfiles] = openall();
-    [stretchst, stretchen, stretchsrc, stretchdst] = loadxwavs(fnames, dirpath, nfiles);
+    [stretchst, stretchen, stretchsrc, stretchdst, stretchden] = loadxwavs(fnames, dirpath, nfiles);
     nstretches = length(stretchst);
     
     containsbp = zeros(1, nstretches);
