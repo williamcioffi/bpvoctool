@@ -31,6 +31,8 @@ function findbpclips()
 
 %some constants
 FILESEP = filesep;
+LOGTICKS = [10 15 30 100 500 1000];
+LINTICKS = [20 100 250 500 750 1000];
 %f(1) = 15;
 %f(2) = 30;
 
@@ -44,10 +46,12 @@ containsba = [];
 callpos = {};
 y = 0;
 fs = 0;
+% bits = 0;
 nfiles = 0;
 dirpath = '';
 fnames = {};
 currentscale = 'log';
+currentticks = LOGTICKS;
 stretchst = [];
 stretchen = [];
 stretchsrc = [];
@@ -86,6 +90,15 @@ function keypress_callback(~, eventdata)
     oldcurrentfile = currentstretch;
     
     switch k
+%         case 'w'
+%             if ~isempty(y)
+%                 basefilename = strsplit(fnames{stretchsrc(currentstretch)}, '_');
+%                 prefix = strcat(basefilename{1}, '_', basefilename{2}, '_');
+%                 datepart = datestr(stretchdst(currentstretch), 'yymmdd_HHMMSS');
+%                 extension = '.wav';
+%                 writefilename = strcat(prefix, datepart, extension); 
+%                 audiowrite(writefilename, y, fs, 'BitsPerSample', bits);
+%             end
         case 'q'
             if currentstretch <= length(callpos)
                 hold on;
@@ -195,11 +208,14 @@ function keypress_callback(~, eventdata)
             switch(currentscale)
                 case 'log'
                     currentscale = 'linear';
+                    currentticks = LINTICKS;
                 case 'linear'
                     currentscale = 'log';
+                    currentticks = LOGTICKS;
             end
             
             set(gca, 'YScale', currentscale);
+            set(gca, 'YTick', currentticks);
         case 'd'
             if ~isempty(callpos)
                 lcp = length(callpos{currentstretch});
@@ -255,14 +271,15 @@ function [y, fs] = redraw()
                          stretchsrc(currentstretch, :), ...
                          dirpath, fnames);
                      
-    nfft = 2^(ceil(log2(fs))-1);
+%    nfft = 2^(ceil(log2(fs))-1);
+    nfft = fs;
     win = hann(nfft);
     adv = nfft / 2;
     
     spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
 %   colorbar off;
     set(gca, 'YScale', currentscale);
-    set(gca, 'YTick', [10 15 30 100 500 1000]);
+    set(gca, 'YTick', currentticks);
 end
 
 function getjustbps()
@@ -302,6 +319,10 @@ function findfiles()
     
     callpos = {};
     currentstretch = 1;
+    
+%     info = audioinfo(strcat(dirpath, fnames{1}));
+%     bits = info.BitsPerSample;
+    
     [y, fs] = redraw();
 end
 
