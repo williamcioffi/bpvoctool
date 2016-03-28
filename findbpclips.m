@@ -15,7 +15,8 @@ function findbpclips()
 % q -- display marked calls
 %
 % g -- go to a particular chunck (by index)
-% hjkl h first l last j left k right
+% hjkl -- vim controls (sortof) j k go up and down one file h l go up and
+% down one containsbp
 % b -- mark a chunck as containing at least one bp 20hz call.
 % n -- mark a chunck as containing at least one ba train.
 % t -- load a file of times to mark those chuncks as bp.
@@ -30,16 +31,16 @@ function findbpclips()
 
 %some constants
 FILESEP = filesep;
-f(1) = 15;
-f(2) = 30;
+%f(1) = 15;
+%f(2) = 30;
 
 %some finances
 curname = '';
 bpname = '';
 baname = '';
 currentstretch = -1;
-containsbp = 0;
-containsba = 0;
+containsbp = [];
+containsba = [];
 callpos = {};
 y = 0;
 fs = 0;
@@ -118,7 +119,7 @@ function keypress_callback(~, eventdata)
             done = 0;
             while ~done
                 index = input('go to file ?> ');
-                if(index > 0 & index <= nstretches)
+                if(index > 0 && index <= nstretches)
                     currentstretch = index;
                     if(currentstretch ~= index)
                         redraw();
@@ -140,7 +141,28 @@ function keypress_callback(~, eventdata)
             if(currentstretch < 1)
                 currentstretch = 1;
             end
-            
+        case 'h'
+            if ~isempty(containsbp)
+                desebps = find(containsbp == 1);
+                currentdif = desebps - currentstretch;
+                lowstretch = max(currentdif(currentdif < 0));
+
+                if ~isempty(lowstretch)
+                    laststretchwithbp = desebps(lowstretch == currentdif);
+                    currentstretch = laststretchwithbp;
+                end
+            end
+        case 'l'
+            if ~isempty(containsbp)
+                desebps = find(containsbp == 1);
+                currentdif = desebps - currentstretch;
+                lowstretch = min(currentdif(currentdif > 0));
+
+                if ~isempty(lowstretch)
+                    nextstretchwithbp = desebps(lowstretch == currentdif);
+                    currentstretch = nextstretchwithbp;
+                end
+            end
         case 'b'
             switch(containsbp(currentstretch))
                 case 0
@@ -205,8 +227,14 @@ function updatename()
                           num2str(currentstretch), '/',         ...
                           num2str(nstretches), '__',            ...
                           fnames(stretchsrc(currentstretch)));
-                      
-    bpname = char(strcat('BP:', num2str(containsbp(currentstretch))));
+    
+    asterix = ''; %add an asterix if there are marked calls
+    if ~isempty(callpos) && length(callpos) >= currentstretch
+        if ~isempty(callpos{currentstretch})
+            asterix = '*';
+        end
+    end
+    bpname = char(strcat('BP:', num2str(containsbp(currentstretch)), asterix));
     baname = char(strcat('BA:', num2str(containsba(currentstretch))));
     
     %fig.Name = curname;
