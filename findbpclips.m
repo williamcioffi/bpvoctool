@@ -183,10 +183,14 @@ function keypress_callback(~, eventdata)
             updatename();
         case 't'
             % THIS DOES NO ERROR CHECKING FIX THAT LATER
-            [csvfilename, csvdirpath] = uigetfile(dirpath);
-            csvfilename = strcat(csvdirpath, FILESEP, csvfilename);
-            bp_pos_tmp =  id_bp_det_auto(csvfilename, stretchdst, stretchden);
-            containsbp(bp_pos_tmp) = 1;
+            [csvfilename, csvdirpath] = uigetfile({'*.*'}, dirpath);
+            if csvdirpath ~= 0
+                csvfilename = strcat(csvdirpath, FILESEP, csvfilename);
+                bp_pos_tmp =  id_bp_det_auto(csvfilename, stretchdst, stretchden);
+                containsbp(bp_pos_tmp) = 1;
+            else
+                error('did not find file')
+            end
         case 'i'
             switch(currentscale)
                 case 'log'

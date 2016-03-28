@@ -43,6 +43,25 @@ while ~done
         st = pt - HALFWINDOW;
         en = pt + HALFWINDOW - 1;
         
+        % checking to make sure you clicked in the right place
+        % is there a better way to do this?
+        if st > length(yf);
+            st = length(yf) - HALFWINDOW*2;
+        end
+        
+        if en > length(yf)
+            en = length(yf);
+        end
+        
+        if st < 1
+            st = 1;
+        end
+        
+        if en < 1
+            en = HALFWINDOW*2;
+        end
+        %end of checking to see if you clicked in the right place
+        
         xx = [st'   st'   en'   en'] ./ fs;
         yy = [f(1) f(2) f(2) f(1)];
         
@@ -60,6 +79,26 @@ while ~done
             
             st(i) = ct(i) - HALFWINDOW;
             en(i) = ct(i) + HALFWINDOW - 1;
+            
+            % checking to make sure you clicked in the right place
+            % is there a better way to do this?
+            % makes me feel weird that i have to do this twice
+            if st(i) > length(yf);
+                st(i) = length(yf) - HALFWINDOW*2;
+            end
+        
+            if en(i) > length(yf)
+                en(i) = length(yf);
+            end
+
+            if st(i) < 1
+                st(i) = 1;
+            end
+
+            if en(i) < 1
+                en = HALFWINDOW*2;
+            end
+            %end of checking to see if you clicked in the right place
         end
 
         runningct = [runningct ct];
