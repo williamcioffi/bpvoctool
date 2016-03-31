@@ -1,4 +1,4 @@
-function [runningct] = selectcalls(y, fs)
+function [runningct, runningst, runningen] = selectcalls(y, fs)
 % SELECTCALLS functional version of viewclips
 %   last updated: 16Mar2016
 %~wrc
