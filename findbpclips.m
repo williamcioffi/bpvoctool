@@ -127,7 +127,11 @@ function keypress_callback(~, eventdata)
                     }, 'savedsession');
             
         case 'm'
-            callpos{currentstretch} = selectcalls(y, fs);
+             [tmpcalls, ~, ~] = selectcalls(y, fs);
+             callpos{currentstretch} = tmpcalls;
+             seccalls = tmpcalls / fs;
+             seccalls = sort(seccalls);
+             [seccalls' [0 (seccalls(2:end) - seccalls(1:(end - 1)))]']
         case 'g'
             done = 0;
             while ~done

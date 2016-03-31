@@ -58,6 +58,14 @@ for i=2:nraw
      
      if ddif_sec ~= 0
          curstretch = curstretch + 1;
+     else
+         dese = find(stretch == curstretch);
+         stretchdiff = den(i) - dst(dese(1));
+         stretchdiff_sec = round(stretchdiff * 24 * 60 * 60);
+         
+         if stretchdiff_sec > 300
+             curstretch = curstretch + 1;
+         end
      end
      
      stretch(i) = curstretch; 
@@ -67,7 +75,7 @@ for i=2:nraw
 %num2str(i), '/', num2str(nraw)));
 % end
 end
-close(wb);
+
 
 ustretch = unique(stretch);
 nstretch = length(ustretch);
@@ -87,5 +95,6 @@ for i=1:nstretch
      stretchdst(i) = dst(curstretch(1));
      stretchden(i) = den(curstretch(end));
 end
+close(wb);
 
 end
