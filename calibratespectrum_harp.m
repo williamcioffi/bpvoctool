@@ -1,6 +1,6 @@
 tf = load('561_090720_invSensit.tf');
-freq = tf(:, 1);
-uppc = tf(:, 2);
+cal_freq = tf(:, 1);
+cal_dB = tf(:, 2);
 
 [fnames, dirpath, nfiles] = openall();
 [y fs] = audioread(fullfile(dirpath, fnames{3}));
@@ -23,7 +23,7 @@ set(gca, 'YScale', 'log');
 
 pxx = 10*log10(pxx);
 
-ptf = interp1(freq, uppc, fff, 'linear', 'extrap');
+ptf = interp1(cal_freq, cal_dB, fff, 'linear', 'extrap');
 pxx = ptf + pxx;
 
 semilogx(fff, pxx);
@@ -41,7 +41,7 @@ ys = y(st:en);
 
 [pxx fff] = pwelch(ys, win, adv, nfft, fs);
 pxx = 10*log10(pxx);
-ptf = interp1(freq, uppc, fff, 'linear', 'extrap');
+ptf = interp1(cal_freq, cal_dB, fff, 'linear', 'extrap');
 pxx = ptf + pxx;
 
 
@@ -53,7 +53,7 @@ hold on;
 
 [pxx fff] = pwelch(yn, win, adv, nfft, fs);
 pxx = 10*log10(pxx);
-ptf = interp1(freq, uppc, fff, 'linear', 'extrap');
+ptf = interp1(cal_freq, cal_dB, fff, 'linear', 'extrap');
 pxx = ptf + pxx;
 semilogx(fff, pxx);
 ylabel('Spectrum Level [dB re \muPa^2/Hz]');

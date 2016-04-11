@@ -1,30 +1,15 @@
+%[snr] = function calcsnr(ct, st, en, tf)
 % quick and dirty SNR measurement
-% look at the 1 sec with the signal
-% look at the 1 sec before the signal
-% look at the 1 sec after the signal
-% average the 1 sec before and after to mean NOISE
+% look at the WINDOW with the signal (+noise): y_sn
+% look at the WINDOW before the signal: y_n
 
-% or just look right before since there could be lingering singal
-% afterwards
-
-% calculate "inband power" for all three intervals
-% SNR = (SIGNAL - NOISE) / NOISE
-
-% to do this in Raven Michael Pitzrick says do this:
-
-% get inband power in linear units
-% get SNR in linear units
-% convert SNR to dB with 10*log10(SNR)
-
-% another posiibility is the NIS Quick method (incorporated into Raven
-% 2.0??)
-
-% check out this question on the forum Laela asked:
-% http://ravensoundsoftware.com/forum/archive/index.php?t-7973.html
-
-% do this on the filtered wavform?!
-% or do it off the psd?
-% apply a transfer function
+% calculate pwelch [dB re uPa^2 Hz^-1]
+% apply transfer function for correct HARP
+% convert to linear scale
+% sum pxx over frequency range of interest (15 - 30 Hz).
+% calculate signal as y_s =  y_sn - y_n
+% convert back to dB scale (10log10)
+% SNR = y_s - y_n
 
 
 
@@ -36,8 +21,6 @@ nyq = fs / 2;
 
 f(1) = 15;
 f(2) = 30;
-[b a] = butter(3, f/nyq);
-yf = filtfilt(b, a, y);
 
 nfft = fs;
 win = hann(nfft);
@@ -49,44 +32,100 @@ set(gca, 'YScale', 'log');
 
 WINLENGTH = length(st(1):en(1));
 
-%forwardst = en;
-%forwarden = en + WINLENGTH - 1;
+backwardst = st - WINLENGTH + 1;    % start of noise box
+backwarden = st;                    % end of noise box
 
-backwardst = st - WINLENGTH + 1;
-backwarden = st;
+% check to make sure we have room to look behind for a noise box
+if(backwardst < 1)
+    backwardst = NaN;
+end
 
-%xxf = [forwardst'   forwardst'   forwarden'   forwarden'] ./ fs;
-yy = [f(1) f(2) f(2) f(1)];
+yy = [f(1) f(2) f(2) f(1)]; % this is for drawing on the y axis
 
+% convert samples to seconds for the purposes of drawing on the x axis
 xxb = [backwardst' backwardst' backwarden' backwarden'] ./ fs;
+xx_sel = [st' st' en' en'] ./ fs;
 
+
+% load in the transfer function
+% this is just a dummy example
+tf = load('561_090720_invSensit.tf');
+cal_freq = tf(:, 1);
+cal_dB = tf(:, 2);
+
+for i = 1:length(ct)
+    if(~isnan(backwardst(i))    % do we have a noise box?
+        yn = y(backwardst(i):backwarden(i));    %noise
+        ysn = y(st(i):en(i));                   %signal+noise
+
+        % calculate dB from the pwelch for the signal
+        [pxx fff] = pwelch(ysn, win, adv, nfft, fs);
+        pxx_db = 10*log10(pxx);
+        
+        % interpolate the transfer function so that it matches the pxx
+        ptf = interp1(cal_freq, cal_dB, fff, 'linear', 'extrap');
+        
+        % just add them together
+        pxx_db_cal = ptf + pxx_db;
+
+        % put it back on the linear scale for summing
+        pxx_lin_cal = 10.^(pxx_db_cal/10);
+
+        %in the pxx the 1st index corresponds to freq 0 hz so add 1 to the 
+        %frequency to get the correct index to get the correct 
+
+        ysn_sum = sum(pxx_lin_cal((f(1)+1):(f(2)+1)));
+
+        % calculate dB from the pwelch for the noise
+        [pxx fff] = pwelch(yn, win, adv, nfft, fs);
+        pxx_db = 10*log10(pxx);
+        
+        % interpolate the transfer function so that it matches the pxx
+        % and then
+        ptf = interp1(cal_freq, cal_dB, fff, 'linear', 'extrap');
+        pxx_db_cal = ptf + pxx_db;
+
+        pxx_lin_cal = 10.^(pxx_db_cal/10);
+
+        %in the pxx the 1st index corresponds to freq 0 hz so add 1 to the 
+        %frequency to get the correct index to get the correct 
+
+        yn_sum = sum(pxx_lin_cal((f(1)+1):(f(2)+1)));
+
+        %calculat ys_sum just the signal minus the noise
+        ys_sum = ysn_sum - yn_sum;
+
+        %convert back to dB
+        ys_sum_db  = 10*log10(ys_sum);
+        yn_sum_db  = 10*log10(yn_sum);
+        ysn_sum_db = 10*log10(ysn_sum);
+
+        %calculate snr
+        snr(i) = ys_sum_db - yn_sum_db;
+
+        snr_nomins(i) = ysn_sum_db - yn_sum_db;
+    end
+end
+
+
+
+figure(1);
+
+nfft = fs;
+win = hann(nfft);
+adv = nfft / 2;
+spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
+set(gca, 'YScale', 'log');
 
 for i = 1:length(ct)
     hold on;
-%    plot(xxf(i, :), yy, 'm:');
-    plot(xxb(i, :), yy, 'm:');
+    plot(xx_sel(i, :), yy, 'k:');
+    
+    if(~isnan(xxb(i,1)))    %make sure there is noise box to draw
+        plot(xxb(i, :), yy, 'm:');
+    end
+    
     hold off;
 end
 
-
-for i = 1:length(ct)
-    tmpyf_sig = yf(st(i):en(i));
-%    tmpyf_fnoise = yf(forwardst(i):forwarden(i));
-    tmpyf_bnoise = yf(backwardst(i):backwarden(i));
-    
-    sig(i) = sum(tmpyf_sig .^2);
-%    fnoise(i) = sum(tmpyf_fnoise .^2);
-    backnoise(i) = sum(tmpyf_bnoise .^2);
-%    meannoise(i) = mean([fnoise(i), backnoise(i)]);
-   
-%     s(i) = bandpower(y(st(i):en(i)), fs, f);
-%     n(i) = bandpower(y(forwardst(i):forwarden(i)));
-end
-
-SNR_linear = (sig - backnoise) ./ backnoise;
-SNR_dB = 10*log10(SNR_linear);
-
-% SNR_bp_linear = (s - n) ./ n;
-% SNR_bp_dB = 10*log10(SNR_bp_linear);
-
-
+%end
