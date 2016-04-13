@@ -71,6 +71,9 @@ for i = 1:length(st)
         % just add them together
         pxx_db_cal = ptf + pxx_db;
 
+        
+figure;
+semilogx(fff, pxx_db_cal);
         % put it back on the linear scale for summing
         pxx_lin_cal = 10.^(pxx_db_cal/10);
 
@@ -88,6 +91,11 @@ for i = 1:length(st)
         ptf = interp1(cal_freq, cal_dB, fff, 'linear', 'extrap');
         pxx_db_cal = ptf + pxx_db;
 
+        
+
+hold on
+semilogx(fff, pxx_db_cal);
+hold off
         pxx_lin_cal = 10.^(pxx_db_cal/10);
 
         %in the pxx the 1st index corresponds to freq 0 hz so add 1 to the 
@@ -105,8 +113,10 @@ for i = 1:length(st)
 
         %calculate snr
         snr(i) = ys_sum_db - yn_sum_db;
-
-        snr_nominus(i) = ysn_sum_db - yn_sum_db;
+        if(~isreal(snr(i)))
+            snr(i) = NaN;
+        end
+        %snr_nominus(i) = ysn_sum_db - yn_sum_db;
     else
         snr(i) = NaN;
     end
