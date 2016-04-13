@@ -33,8 +33,8 @@ function findbpclips()
 FILESEP = filesep;
 LOGTICKS = [10 15 30 100 500 1000];
 LINTICKS = [20 100 250 500 750 1000];
-%f(1) = 15;
-%f(2) = 30;
+f(1) = 15;
+f(2) = 30;
 
 %some finances
 curname = '';
@@ -44,9 +44,13 @@ currentstretch = -1;
 containsbp = [];
 containsba = [];
 callpos = {};
-y = 0;
-fs = 0;
-% bits = 0;
+callsnr = {};
+y = [];
+fs = [];
+nfft = [];
+win = [];
+adv = [];
+bits = [];
 nfiles = 0;
 dirpath = '';
 fnames = {};
@@ -58,6 +62,9 @@ stretchsrc = [];
 stretchdst = [];
 stretchden = [];
 nstretches = 0;
+tf = [];
+clipplayer = [];
+fileprefix = [];
 
 
 % create and then hdie the ui as it is being constructed
@@ -110,6 +117,13 @@ function keypress_callback(~, eventdata)
         case 'o'
             uiopen()
             [y, fs] = redraw();
+        case 'z'
+            defaultoutfilename = strcat(fileprefix, '_', datestr(stretchdst(currentstretch), 'yyyymmdd_HHMMSS'), '.wav');
+            [outfile, outpath] = uiputfile({'*.wav', 'wave file'}, 'save clip..', defaultoutfilename);
+            
+            if(outpath ~= 0)
+                audiowrite(fullfile(outpath, outfile), y, fs, 'BitsPerSample', bits);
+            end
         case 's'
             uisave({'stretchst',        ...
                     'stretchen',        ...
@@ -120,6 +134,7 @@ function keypress_callback(~, eventdata)
                     'containsbp',       ...
                     'containsba',       ...
                     'callpos',          ...
+                    'callsnr',          ...
                     'fnames',           ...
                     'nfiles',           ...
                     'dirpath',          ...
@@ -127,8 +142,10 @@ function keypress_callback(~, eventdata)
                     }, 'savedsession');
             
         case 'm'
-             [tmpcalls, ~, ~] = selectcalls(y, fs);
+             [tmpcalls, tmpst, tmpen] = selectcalls(y, fs);
+             [tmpsnr, ~, ~] = calcsnr(tmpst, tmpen, tf, y, fs, f, nfft, win, adv);
              callpos{currentstretch} = tmpcalls;
+             callsnr{currentstretch} = tmpsnr;
              seccalls = tmpcalls / fs;
              seccalls = sort(seccalls);
              [seccalls' [0 (seccalls(2:end) - seccalls(1:(end - 1)))]']
@@ -146,6 +163,7 @@ function keypress_callback(~, eventdata)
                     fprintf('please enter a number between 1 and %i\n', nstretches);
                 end
             end
+            figure(1);
                 
         case 'k'
             currentstretch = currentstretch + 1;
@@ -237,8 +255,39 @@ function keypress_callback(~, eventdata)
                 
         case 'x'
             keyboard;
-        case 'p'
-            getjustbps();
+        case '1'
+            clipplayer = audioplayer(y/max(abs(y)), fs, bits);
+            clipplayer.play();
+        case '2'
+            if(~isempty(clipplayer))
+                if(clipplayer.isplaying())
+                    clipplayer.pause();
+                else
+                    clipplayer.resume();
+                end
+            end
+        case '3'
+            clipplayer = audioplayer(y/max(abs(y)), fs*10, bits);
+            clipplayer.play();
+        case '4'
+            nyq = fs / 2;
+            [b a] = butter(3, f/nyq);
+            yf = filtfilt(b, a, y);
+            
+            clipplayer = audioplayer(yf/max(abs(yf)), fs*10, bits);
+            clipplayer.play();
+        %case 'p'
+        %    getjustbps();
+        case '0'
+            nyq = fs / 2;
+            [b a] = butter(3, f/nyq);
+            yf = filtfilt(b, a, y);
+            spectrogram_truthful_labels(yf, win, adv, nfft, fs, 'yaxis');
+%           colorbar off;
+            set(gca, 'YScale', currentscale);
+            set(gca, 'YTick', currentticks);  
+        case 'r'
+            [y, fs] = redraw();
     end
     
     if(oldcurrentfile ~= currentstretch)
@@ -268,6 +317,7 @@ function updatename()
 end
 
 function [y, fs] = redraw()
+    clipplayer = [];
     updatename();
     
     [y, fs] = loadstretch(stretchst(currentstretch), ...
@@ -315,7 +365,14 @@ end
 
 function findfiles()        
     [fnames, dirpath, nfiles] = openall();
-    [stretchst, stretchen, stretchsrc, stretchdst, stretchden] = loadxwavs(fnames, dirpath, nfiles);
+    [tffile, tfpath] = uigetfile({'*.tf', 'transfer function'}, 'select a transfer function file', dirpath);
+    if(dirpath == 0)
+        error('did not select a file...');
+    end
+    
+    tf = load(fullfile(tfpath, tffile));
+    
+    [stretchst, stretchen, stretchsrc, stretchdst, stretchden, fileprefix] = loadxwavs(fnames, dirpath, nfiles);
     nstretches = length(stretchst);
     
     containsbp = zeros(1, nstretches);
@@ -324,8 +381,8 @@ function findfiles()
     callpos = {};
     currentstretch = 1;
     
-%     info = audioinfo(strcat(dirpath, fnames{1}));
-%     bits = info.BitsPerSample;
+    info = audioinfo(fullfile(dirpath, fnames{1}));
+    bits = info.BitsPerSample;
     
     [y, fs] = redraw();
 end

@@ -1,4 +1,4 @@
-function [stretchst stretchen stretchsrc stretchdst stretchden] = loadxwavs(fnames, dirpath, nfiles)
+function [stretchst stretchen stretchsrc stretchdst stretchden, fileprefix] = loadxwavs(fnames, dirpath, nfiles)
 % loads a folder of xwavs and sets up stretches
 % still experimental so it has a dumb name change that later
 % only returns information about stretches right now but could easily be
@@ -14,8 +14,9 @@ srcfile = [];
 
 wb = waitbar(0, strcat('loading files:', ...
 num2str(0), '/', num2str(nfiles)));
-for f = 1:nfiles
-    xwavparams = rdxwavhd(dirpath, fnames{f});
+for fi = 1:nfiles
+    xwavparams = rdxwavhd(dirpath, fnames{fi});
+    fileprefix = xwavparams.xhd.ExperimentName;
     
     dst_tmp = xwavparams.raw.dnumStart;
     den_tmp = xwavparams.raw.dnumEnd;
@@ -32,7 +33,7 @@ for f = 1:nfiles
     ren_tmp = cumsamp;
     rst_tmp = ren_tmp - sampnum + 1;
     
-    srcfile_tmp = repmat(f, 1, nraw);
+    srcfile_tmp = repmat(fi, 1, nraw);
     
     dst = [dst dst_tmp];
     den = [den den_tmp];
@@ -40,8 +41,8 @@ for f = 1:nfiles
     rst = [rst rst_tmp];
     srcfile = [srcfile srcfile_tmp];
     
-waitbar(f/nfiles, wb, strcat('loading files:', ...
-num2str(f), '/', num2str(nfiles)));
+waitbar(fi/nfiles, wb, strcat('loading files:', ...
+num2str(fi), '/', num2str(nfiles)));
 end
 
 nraw = length(dst);
