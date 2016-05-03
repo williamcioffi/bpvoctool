@@ -20,7 +20,7 @@ function findbpclips()
 % b -- mark a chunck as containing at least one bp 20hz call.
 % n -- mark a chunck as containing at least one ba train.
 % t -- load a file of times to mark those chuncks as bp.
-% p -- reduce down to just chuncks identified as having bp.
+% p -- save a table of the calls.
 %
 % i -- toggle the spectrogram display between log and linear.
 %
@@ -35,6 +35,8 @@ LOGTICKS = [10 15 30 100 500 1000];
 LINTICKS = [20 100 250 500 750 1000];
 f(1) = 15;
 f(2) = 30;
+lookwin = 2;
+returnwin = 1/2;
 
 %some finances
 curname = '';
@@ -65,6 +67,7 @@ nstretches = 0;
 tf = [];
 clipplayer = [];
 fileprefix = [];
+% xwav = NaN;
 
 
 % create and then hdie the ui as it is being constructed
@@ -142,13 +145,14 @@ function keypress_callback(~, eventdata)
                     }, 'savedsession');
             
         case 'm'
-             [tmpcalls, tmpst, tmpen] = selectcalls(y, fs);
+             [tmpcalls, tmpst, tmpen] = selectcalls(y, fs, lookwin*fs, returnwin*fs);
              [tmpsnr, ~, ~] = calcsnr(tmpst, tmpen, tf, y, fs, f, nfft, win, adv);
              callpos{currentstretch} = tmpcalls;
              callsnr{currentstretch} = tmpsnr;
              seccalls = tmpcalls / fs;
              seccalls = sort(seccalls);
              [seccalls' [0 (seccalls(2:end) - seccalls(1:(end - 1)))]']
+             tmpsnr'
         case 'g'
             done = 0;
             while ~done
@@ -276,8 +280,9 @@ function keypress_callback(~, eventdata)
             
             clipplayer = audioplayer(yf/max(abs(yf)), fs*10, bits);
             clipplayer.play();
-        %case 'p'
+        case 'p'
         %    getjustbps();
+        %    savetableofcalls();
         case '0'
             nyq = fs / 2;
             [b a] = butter(3, f/nyq);
@@ -365,14 +370,21 @@ end
 
 function findfiles()        
     [fnames, dirpath, nfiles] = openall();
+    % xwav = isxwav(fnames);
+    
     [tffile, tfpath] = uigetfile({'*.tf', 'transfer function'}, 'select a transfer function file', dirpath);
     if(dirpath == 0)
         error('did not select a file...');
+    else
+        tf = load(fullfile(tfpath, tffile));
     end
     
-    tf = load(fullfile(tfpath, tffile));
+    %if(xwav)
+        [stretchst, stretchen, stretchsrc, stretchdst, stretchden, fileprefix] = loadxwavs(fnames, dirpath, nfiles);
+    %else
+    %    [stretchst, stretchen, stretchsrc, stretchdst, stretchden, fileprefix] = loadwavs(fnames, dirpath, nfiles);
+    %end
     
-    [stretchst, stretchen, stretchsrc, stretchdst, stretchden, fileprefix] = loadxwavs(fnames, dirpath, nfiles);
     nstretches = length(stretchst);
     
     containsbp = zeros(1, nstretches);
@@ -385,6 +397,10 @@ function findfiles()
     bits = info.BitsPerSample;
     
     [y, fs] = redraw();
+end
+
+function savetableofcalls()
+    
 end
 
 end

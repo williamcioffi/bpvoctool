@@ -1,11 +1,12 @@
-function [runningct, runningst, runningen] = selectcalls(y, fs)
+function [runningct, runningst, runningen] = selectcalls(y, fs, lookwindow, returnwindow)
 % SELECTCALLS functional version of viewclips
-%   last updated: 16Mar2016
+% lookwindow and returnwindow are specified in samples
+%   last updated: 29Apr2016
 %~wrc
 
 %constants
 nyq = fs / 2;
-HALFWINDOW = 2 * fs; % length of window forward from center of call and back from center of call
+%HALFWINDOW = 2 * fs; % length of window forward from center of call and back from center of call
 
 % these will be the positions in running samples of the file.
 runningct = [];
@@ -40,13 +41,13 @@ while ~done
         [a, b] = ginput(count);
         
         pt = floor(a * fs)';
-        st = pt - HALFWINDOW;
-        en = pt + HALFWINDOW - 1;
+        st = pt - lookwindow;
+        en = pt + lookwindow - 1;
         
         % checking to make sure you clicked in the right place
         % is there a better way to do this?
         if st > length(yf);
-            st = length(yf) - HALFWINDOW*2;
+            st = length(yf) - lookwindow*2;
         end
         
         if en > length(yf)
@@ -58,7 +59,7 @@ while ~done
         end
         
         if en < 1
-            en = HALFWINDOW*2;
+            en = lookwindow*2;
         end
         %end of checking to see if you clicked in the right place
         
@@ -77,14 +78,14 @@ while ~done
             peak = max(abs(yf(clip)));
             ct(i) = clip(find(abs(yf(clip)) == peak));
             
-            st(i) = ct(i) - HALFWINDOW;
-            en(i) = ct(i) + HALFWINDOW - 1;
+            st(i) = ct(i) - returnwindow;
+            en(i) = ct(i) + returnwindow - 1;
             
             % checking to make sure you clicked in the right place
             % is there a better way to do this?
             % makes me feel weird that i have to do this twice
             if st(i) > length(yf);
-                st(i) = length(yf) - HALFWINDOW*2;
+                st(i) = length(yf) - returnwindow*2;
             end
         
             if en(i) > length(yf)
@@ -96,7 +97,7 @@ while ~done
             end
 
             if en(i) < 1
-                en = HALFWINDOW*2;
+                en = returnwindow*2;
             end
             %end of checking to see if you clicked in the right place
         end

@@ -72,8 +72,8 @@ for i = 1:length(st)
         pxx_db_cal = ptf + pxx_db;
 
         
-figure;
-semilogx(fff, pxx_db_cal);
+ figure;
+ semilogx(fff, pxx_db_cal);
         % put it back on the linear scale for summing
         pxx_lin_cal = 10.^(pxx_db_cal/10);
 
@@ -93,9 +93,9 @@ semilogx(fff, pxx_db_cal);
 
         
 
-hold on
-semilogx(fff, pxx_db_cal);
-hold off
+ hold on
+ semilogx(fff, pxx_db_cal);
+ hold off
         pxx_lin_cal = 10.^(pxx_db_cal/10);
 
         %in the pxx the 1st index corresponds to freq 0 hz so add 1 to the 
