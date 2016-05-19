@@ -46,6 +46,7 @@ currentstretch = -1;
 containsbp = [];
 containsba = [];
 callpos = {};
+detectpos = {};
 callsnr = {};
 y = [];
 fs = [];
@@ -112,7 +113,13 @@ function keypress_callback(~, eventdata)
         case 'q'
             if currentstretch <= length(callpos)
                 hold on;
-                plot(callpos{currentstretch}/fs, 20, '*');
+                plot(callpos{currentstretch}/fs, 25, '*');
+                hold off;
+            end
+        case 'w'
+            if currentstretch <= length(detectpos)
+                hold on;
+                plot(detectpos{currentstretch}/fs, 25, '*');
                 hold off;
             end
         case 'f'
@@ -138,6 +145,7 @@ function keypress_callback(~, eventdata)
                     'containsba',       ...
                     'callpos',          ...
                     'callsnr',          ...
+                    'detectpos',        ...
                     'fnames',           ...
                     'nfiles',           ...
                     'dirpath',          ...
@@ -228,8 +236,12 @@ function keypress_callback(~, eventdata)
                 bp_pos_tmp =  id_bp_det_auto(csvfilename, stretchdst, stretchden);
                 containsbp(bp_pos_tmp) = 1;
             else
-                error('did not find file')
-            end
+                error('did not find file');
+            end 
+        case 'y'
+            %containsbp = [];
+            %detectpos = {};
+            loadxbatdetections();
         case 'i'
             switch(currentscale)
                 case 'log'
@@ -337,6 +349,7 @@ function [y, fs] = redraw()
     
     spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
 %   colorbar off;
+    colormap bone
     set(gca, 'YScale', currentscale);
     set(gca, 'YTick', currentticks);
 end
@@ -399,8 +412,41 @@ function findfiles()
     [y, fs] = redraw();
 end
 
+function loadxbatdetections()
+[xfile, xpath] = uigetfile({'*.mat'}, dirpath);
+
+if xpath ~= 0
+    xsts = load(fullfile(xpath, xfile));
+    xsts = xsts.st*fs;
+    xsts_info = nan(1, length(xsts));
+    here = [];
+    for(i = 1:length(xsts))
+        tester = xsts(i) - stretchst;
+        tester = tester(find(tester >= 0));
+
+        heretmp = find(min(tester) == tester);
+        here = [here heretmp];
+        xsts_info(i) = heretmp;
+    end
+
+    u_heres = unique(xsts_info);
+
+    for(i = 1:length(u_heres))
+        cur = u_heres(i);
+        dese = find(xsts_info == cur);
+        
+        if(length(dese) > 5)
+            tmppos = xsts(dese) - stretchst(cur);
+            detectpos{cur} = tmppos;
+            containsbp(cur) = 1;
+        end
+    end
+else
+    error('did not find file');
+end
+end
+
 function savetableofcalls()
-    
 end
 
 end
