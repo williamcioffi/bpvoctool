@@ -28,83 +28,91 @@ clear y;
 
 runningcount = 1;
 done = 0;
-while ~done
-    count = input('ncalls (enter 0 when done) ?> ');
-    if count == 0
-        done = 1;
-    else
-        ct = nan(1, count);
-        st = nan(1, count);
-        en = nan(1, count);
-        pt = nan(1, count);
+dlgmsg = 'ncalls (enter 0 when done)';
 
-        [a, b] = ginput(count);
-        
-        pt = floor(a * fs)';
-        st = pt - lookwindow;
-        en = pt + lookwindow - 1;
-        
-        % checking to make sure you clicked in the right place
-        % is there a better way to do this?
-        if st > length(yf);
-            st = length(yf) - lookwindow*2;
-        end
-        
-        if en > length(yf)
-            en = length(yf);
-        end
-        
-        if st < 1
-            st = 1;
-        end
-        
-        if en < 1
-            en = lookwindow*2;
-        end
-        %end of checking to see if you clicked in the right place
-        
-        xx = [st'   st'   en'   en'] ./ fs;
-        yy = [f(1) f(2) f(2) f(1)];
-        
-        for i=1:count
-            text(xx(i, 2), yy(2), num2str(runningcount), 'color', 'red');
-            hold on;
-            plot(xx(i,:), yy, 'k:');
-            hold off;
-            
-            runningcount = runningcount + 1;
-            
-            clip = st(i):en(i);
-            peak = max(abs(yf(clip)));
-            ct(i) = clip(find(abs(yf(clip)) == peak));
-            
-            st(i) = ct(i) - returnwindow;
-            en(i) = ct(i) + returnwindow - 1;
-            
+while ~done
+    instr = inputdialog('', dlgmsg);
+    [count success] = str2num(instr);
+    
+    if ~success
+        dlgmsg = 'only numbers! (0 when done)';
+    else    
+        if count == 0
+            done = 1;
+        else
+            ct = nan(1, count);
+            st = nan(1, count);
+            en = nan(1, count);
+            pt = nan(1, count);
+
+            [a, b] = ginput(count);
+
+            pt = floor(a * fs)';
+            st = pt - lookwindow;
+            en = pt + lookwindow - 1;
+
             % checking to make sure you clicked in the right place
             % is there a better way to do this?
-            % makes me feel weird that i have to do this twice
-            if st(i) > length(yf);
-                st(i) = length(yf) - returnwindow*2;
-            end
-        
-            if en(i) > length(yf)
-                en(i) = length(yf);
+            if st > length(yf);
+                st = length(yf) - lookwindow*2;
             end
 
-            if st(i) < 1
-                st(i) = 1;
+            if en > length(yf)
+                en = length(yf);
             end
 
-            if en(i) < 1
-                en = returnwindow*2;
+            if st < 1
+                st = 1;
+            end
+
+            if en < 1
+                en = lookwindow*2;
             end
             %end of checking to see if you clicked in the right place
-        end
 
-        runningct = [runningct ct];
-        runningst = [runningst st];
-        runningen = [runningen en];
+            xx = [st'   st'   en'   en'] ./ fs;
+            yy = [f(1) f(2) f(2) f(1)];
+
+            for i=1:count
+                text(xx(i, 2), yy(2), num2str(runningcount), 'color', 'red');
+                hold on;
+                plot(xx(i,:), yy, 'k:');
+                hold off;
+
+                runningcount = runningcount + 1;
+
+                clip = st(i):en(i);
+                peak = max(abs(yf(clip)));
+                ct(i) = clip(find(abs(yf(clip)) == peak));
+
+                st(i) = ct(i) - returnwindow;
+                en(i) = ct(i) + returnwindow - 1;
+
+                % checking to make sure you clicked in the right place
+                % is there a better way to do this?
+                % makes me feel weird that i have to do this twice
+                if st(i) > length(yf);
+                    st(i) = length(yf) - returnwindow*2;
+                end
+
+                if en(i) > length(yf)
+                    en(i) = length(yf);
+                end
+
+                if st(i) < 1
+                    st(i) = 1;
+                end
+
+                if en(i) < 1
+                    en = returnwindow*2;
+                end
+                %end of checking to see if you clicked in the right place
+            end
+
+            runningct = [runningct ct];
+            runningst = [runningst st];
+            runningen = [runningen en];
+        end
     end
 end
 
@@ -119,7 +127,7 @@ if(difference >= part & part*(part - 1) >= nclips)
     dims = [part - 1 part];
 end
 
-figure;
+figure('position', [400 400 600 500]);
 for i=1:nclips
     ytmp = yf(runningst(i):runningen(i));
     

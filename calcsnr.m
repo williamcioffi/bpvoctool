@@ -56,6 +56,17 @@ xxb = [backwardst' backwardst' backwarden' backwarden'] ./ fs;
 cal_freq = tf(:, 1);
 cal_dB = tf(:, 2);
 
+
+nst = length(st);
+part = ceil(sqrt(nst));
+dims = [part part];
+difference = part^2 - nst;
+
+if(difference >= part & part*(part - 1) >= nst)
+    dims = [part - 1 part];
+end
+
+figure('position', [1000 400 600 500]);
 for i = 1:length(st)
     if(~isnan(backwardst(i)))    % do we have a noise box?
         yn = y(backwardst(i):backwarden(i));    %noise
@@ -72,7 +83,7 @@ for i = 1:length(st)
         pxx_db_cal = ptf + pxx_db;
 
         
- figure;
+ subplot(dims(1), dims(2), i);
  semilogx(fff, pxx_db_cal);
         % put it back on the linear scale for summing
         pxx_lin_cal = 10.^(pxx_db_cal/10);

@@ -39,8 +39,10 @@ lookwin = 2;
 returnwin = 1/2;
 currentscale = 'log';
 currentticks = LOGTICKS;
-map = 'bone';   %parula is default
-contrast = 1;
+map = 'parula';   %parula is default
+contrastauto = 1;
+cmin = [];
+cmax = [];
 
 %some finances
 curname = '';
@@ -152,7 +154,8 @@ function keypress_callback(~, eventdata)
                     'nfiles',           ...
                     'dirpath',          ...
                     'fs',               ...
-                    'tf'                ...
+                    'tf',               ...
+                    'bits'              ...
                     }, 'savedsession');
             
         case 'm'
@@ -310,28 +313,30 @@ function keypress_callback(~, eventdata)
         case 'r'
             [y, fs] = redraw();
         case 'c'
-            if contrast == 1
-                contrast = 0;
-            else
-                contrast = 1;
-            end
+            contrastauto = 1; %auto contrast
             redraw();
         case '9'
+            contrastauto = 0; %manual contrast
             caxis([-100 -60]);
+            [cmin cmax] = caxis;
         case '8' % brighter
-            [cmin cmax] = caxis; 
+            contrastauto = 0; %manual contrast
             caxis([cmin - 10 cmax - 10]);
+            [cmin cmax] = caxis; 
         case '7' % darker
-            [cmin cmax] = caxis;
+            contrastauto = 0; %manual contrast
             caxis([cmin + 10 cmax + 10]);
+            [cmin cmax] = caxis; 
         case '6' % more contrast
-            [cmin cmax] = caxis;
+            contrastauto = 0; %manual contrast
             if(cmin + 5 < cmax - 5)
                 caxis([cmin + 5 cmax - 5]);
             end
+            [cmin cmax] = caxis; 
         case '5' % less contrast
-            [cmin cmax] = caxis;
+            contrastauto = 0; %manual contrast
             caxis([cmin - 5 cmax + 5]);
+            [cmin cmax] = caxis; 
     end
     
     if(oldcurrentfile ~= currentstretch)
@@ -475,10 +480,11 @@ end
 end
 
 function setcontrast()
-    if contrast == 1
+    if contrastauto == 1
         caxis('auto');
+        [cmin cmax] = caxis;
     else
-        caxis([-100 -60]);
+        caxis([cmin cmax]);
     end
 end
 
