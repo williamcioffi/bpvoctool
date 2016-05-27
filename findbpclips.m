@@ -37,6 +37,10 @@ f(1) = 15;
 f(2) = 30;
 lookwin = 2;
 returnwin = 1/2;
+currentscale = 'log';
+currentticks = LOGTICKS;
+map = 'bone';   %parula is default
+contrast = 1;
 
 %some finances
 curname = '';
@@ -57,8 +61,6 @@ bits = [];
 nfiles = 0;
 dirpath = '';
 fnames = {};
-currentscale = 'log';
-currentticks = LOGTICKS;
 stretchst = [];
 stretchen = [];
 stretchsrc = [];
@@ -300,11 +302,35 @@ function keypress_callback(~, eventdata)
             [b a] = butter(3, f/nyq);
             yf = filtfilt(b, a, y);
             spectrogram_truthful_labels(yf, win, adv, nfft, fs, 'yaxis');
+            colormap(map);
 %           colorbar off;
             set(gca, 'YScale', currentscale);
             set(gca, 'YTick', currentticks);  
         case 'r'
             [y, fs] = redraw();
+        case 'c'
+            if contrast == 1
+                contrast = 0;
+            else
+                contrast = 1;
+            end
+            redraw();
+        case '9'
+            caxis([-100 -60]);
+        case '8' % brighter
+            [cmin cmax] = caxis; 
+            caxis([cmin - 10 cmax - 10]);
+        case '7' % darker
+            [cmin cmax] = caxis;
+            caxis([cmin + 10 cmax + 10]);
+        case '6' % more contrast
+            [cmin cmax] = caxis;
+            if(cmin + 5 < cmax - 5)
+                caxis([cmin + 5 cmax - 5]);
+            end
+        case '5' % less contrast
+            [cmin cmax] = caxis;
+            caxis([cmin - 5 cmax + 5]);
     end
     
     if(oldcurrentfile ~= currentstretch)
@@ -349,7 +375,8 @@ function [y, fs] = redraw()
     
     spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
 %   colorbar off;
-    colormap bone
+    colormap(map);
+    setcontrast();
     set(gca, 'YScale', currentscale);
     set(gca, 'YTick', currentticks);
 end
@@ -444,6 +471,14 @@ if xpath ~= 0
 else
     error('did not find file');
 end
+end
+
+function setcontrast()
+    if contrast == 1
+        caxis('auto');
+    else
+        caxis([-100 -60]);
+    end
 end
 
 function savetableofcalls()
