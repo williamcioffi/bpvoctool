@@ -160,13 +160,17 @@ function keypress_callback(~, eventdata)
             
         case 'm'
              [tmpcalls, tmpst, tmpen] = selectcalls(y, fs, lookwin*fs, returnwin*fs);
-             [tmpsnr, ~, ~] = calcsnr(tmpst, tmpen, tf, y, fs, f, nfft, win, adv);
              callpos{currentstretch} = tmpcalls;
-             callsnr{currentstretch} = tmpsnr;
              seccalls = tmpcalls / fs;
              seccalls = sort(seccalls);
              [seccalls' [0 (seccalls(2:end) - seccalls(1:(end - 1)))]']
-             tmpsnr'
+             
+             if ~isempty(tf)
+                [tmpsnr, ~, ~] = calcsnr(tmpst, tmpen, tf, y, fs, f, nfft, win, adv);
+                callsnr{currentstretch} = tmpsnr;
+                tmpsnr'
+             end
+             
         case 'g'
             done = 0;
             while ~done

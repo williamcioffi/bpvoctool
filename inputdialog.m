@@ -1,8 +1,10 @@
 function [datstr] = inputdialog(title, prompt)
-% Input dialog. User may hit return after entering info.
+% INPUTDIALOG a no frills replacement for inputdlg which 
+% accepts return as 'OK'
+% returns a string
 
 
-datstr = []; % In case the user closes the GUI.
+datstr = []; % in case the user closes the gui
 S.fh = figure('units','pixels',...
               'position',[500 500 200 100],...
               'menubar','none',...
@@ -19,8 +21,8 @@ S.msg = uicontrol('style', 'text', ...
                   'String', prompt);
                 
 set(S.ed,'call',@ed_call)
-uicontrol(S.ed) % Make the editbox active.
-uiwait(S.fh) % Prevent all other processes from starting until closed.
+uicontrol(S.ed) % make the editbox active
+uiwait(S.fh) % prevent all other processes from starting until closed
 
     function [] = ed_call(varargin)
         %drawnow %not sure why you would need to do this?
