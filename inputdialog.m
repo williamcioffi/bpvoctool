@@ -1,8 +1,11 @@
-function [datstr] = inputdialog(title, prompt)
+function [datstr] = inputdialog(title, prompt, len)
 % INPUTDIALOG a no frills replacement for inputdlg which 
 % accepts return as 'OK'
 % returns a string
 
+if nargin == 2
+    len = 50;
+end
 
 datstr = []; % in case the user closes the gui
 S.fh = figure('units','pixels',...
@@ -13,7 +16,7 @@ S.fh = figure('units','pixels',...
               'resize','off');
 S.ed = uicontrol('style','edit',...
                  'units','pix',...
-                'position', [10 10 50 30]);
+                'position', [10 10 len 30]);
                 %'string', '0');
                  %'position',[10 60 180 30]);%,...
 S.msg = uicontrol('style', 'text', ...

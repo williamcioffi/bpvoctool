@@ -1,4 +1,4 @@
-function [stretchst stretchen stretchsrc stretchdst stretchden, fileprefix] = loadxwavs(fnames, dirpath, nfiles)
+function [stretchst stretchen stretchsrc stretchdst stretchden, fileprefix] = loadwavs(fnames, dirpath, nfiles)
 % loads a folder of wavs and sets up stretches
 % wrc 28Apr2016
 
@@ -8,16 +8,24 @@ ren = [];
 rst = [];
 srcfile = [];
 
+fnames{1} %print an example file so you can see what the indices are
+answer = inputdlg({'date format', 'start index', 'exp name'}, ...
+                                   '', 1, {'yyyymmdd_HHMMSS', '', ''});
+dateformat = answer{1};
+startindex = str2num(answer{2});
+fileprefix = answer{3};
+endindex = startindex + length(dateformat) - 1;
+
 wb = waitbar(0, strcat('loading files:', ...
 num2str(0), '/', num2str(nfiles)));
 for fi = 1:nfiles
-    xwavparams = rdxwavhd(dirpath, fnames{fi});
-    fileprefix = xwavparams.xhd.ExperimentName;
+    currentfilename = fullfile(dirpath, fnames{fi});
+    info = audioinfo(currentfilename);
     
-    dst_tmp = xwavparams.raw.dnumStart;
-    den_tmp = xwavparams.raw.dnumEnd;
-    fs      = xwavparams.fs;
-    nraw    = length(dst_tmp);
+    dst_tmp = datenum(currentfilename(startindex:endindex), dateformat);
+    den_tmp = dst_tmp + info.Duration;
+    fs = info.SampleRate;
+    nraw = ceil(info.Duration / 300);
     
     sampnum = fix((den_tmp(1:end) - dst_tmp(1:end))*60*24*60*fs);
     cumsamp  = sampnum * NaN;

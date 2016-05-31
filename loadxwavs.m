@@ -53,6 +53,8 @@ stretch(1)  = curstretch;
 
 % wb = waitbar(0, strcat('generating stretches:', ...
 % num2str(0), '/', num2str(nraw)));
+
+% this will be a problem if there is only one raw?
 for i=2:nraw
      ddif = dst(i) - den(i-1);
      ddif_sec = round(ddif * 24 * 60 * 60);

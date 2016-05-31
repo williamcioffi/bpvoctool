@@ -29,6 +29,9 @@ function findbpclips()
 %last updated: 22Mar2016
 %~wrc
 
+
+% to do when you find files make sure to clear all the crucial variables.
+
 %some constants
 FILESEP = filesep;
 LOGTICKS = [10 15 30 100 500 1000];
@@ -493,6 +496,7 @@ function setcontrast()
 end
 
 function savetableofcalls()
+    %stub to save a table of calls with information
 end
 
 end
