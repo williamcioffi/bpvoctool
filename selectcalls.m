@@ -27,25 +27,28 @@ clear y;
 % set(gca, 'YScale', 'log');
 
 runningcount = 1;
-done = 0;
-dlgmsg = 'ncalls (enter 0 when done)';
+%done = 0;
+%dlgmsg = 'ncalls (enter 0 when done)';
 
-while ~done
-    instr = inputdialog('', dlgmsg);
-    [count success] = str2num(instr);
+%while ~done
+    %instr = inputdialog('', dlgmsg);
+    %[count success] = str2num(instr);
     
-    if ~success
-        dlgmsg = 'only numbers! (0 when done)';
-    else    
-        if count == 0
-            done = 1;
-        else
+    %if ~success
+    %    dlgmsg = 'only numbers! (0 when done)';
+    %else    
+    %    if count == 0
+    %        done = 1;
+    %    else
+    
+            [a, b, button] = ginput();
+            
+            count = length(a);
+            
             ct = nan(1, count);
             st = nan(1, count);
             en = nan(1, count);
             pt = nan(1, count);
-
-            [a, b] = ginput(count);
 
             pt = floor(a * fs)';
             st = pt - lookwindow;
@@ -53,19 +56,26 @@ while ~done
 
             % checking to make sure you clicked in the right place
             % is there a better way to do this?
-            if st > length(yf);
-                st = length(yf) - lookwindow*2;
+            dese = find(st > length(yf));
+            if ~isempty(dese)
+                st(dese) = length(yf) - lookwindow*2;
+            end
+            
+            dese = find(en > length(yf));
+            
+            if ~isempty(dese)
+                en(dese) = length(yf);
             end
 
-            if en > length(yf)
-                en = length(yf);
-            end
-
-            if st < 1
+            dese = find(st < 1);
+            
+            if ~isempty(dese)
                 st = 1;
             end
+            
+            dese = find(en < 1);
 
-            if en < 1
+            if ~isempty(dese)
                 en = lookwindow*2;
             end
             %end of checking to see if you clicked in the right place
@@ -104,7 +114,7 @@ while ~done
                 end
 
                 if en(i) < 1
-                    en = returnwindow*2;
+                    en(i) = returnwindow*2;
                 end
                 %end of checking to see if you clicked in the right place
             end
@@ -112,9 +122,8 @@ while ~done
             runningct = [runningct ct];
             runningst = [runningst st];
             runningen = [runningen en];
-        end
-    end
-end
+    %end
+%end
 
 % take a look at clips.
 
