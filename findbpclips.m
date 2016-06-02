@@ -119,9 +119,11 @@ function keypress_callback(~, eventdata)
 %             end
         case 'q'
             if currentstretch <= length(callpos)
-                hold on;
-                plot(callpos{currentstretch}/fs, 25, '*');
-                hold off;
+                if ~isempty(callpos{currentsrtech})
+                    hold on;
+                    plot(callpos{currentstretch}/fs, 25, '*');
+                    hold off;
+                end
             end
         case 'w'
             if currentstretch <= length(detectpos)
@@ -158,7 +160,8 @@ function keypress_callback(~, eventdata)
                     'dirpath',          ...
                     'fs',               ...
                     'tf',               ...
-                    'bits'              ...
+                    'bits',             ...
+                    'fileprefix'        ...
                     }, 'savedsession');
             
         case 'm'

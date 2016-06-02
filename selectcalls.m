@@ -41,7 +41,7 @@ runningcount = 1;
     %        done = 1;
     %    else
     
-            [a, b, button] = ginput();
+            [a, b, button] = ginput_white(@drawpoints);
             
             count = length(a);
             
@@ -84,9 +84,9 @@ runningcount = 1;
             yy = [f(1) f(2) f(2) f(1)];
 
             for i=1:count
-                text(xx(i, 2), yy(2), num2str(runningcount), 'color', 'red');
+                %text(xx(i, 2), yy(2), num2str(runningcount), 'color', 'red');
                 hold on;
-                plot(xx(i,:), yy, 'k:');
+                plot(xx(i,:), yy, 'r:');
                 hold off;
 
                 runningcount = runningcount + 1;
