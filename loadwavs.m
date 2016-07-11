@@ -1,14 +1,16 @@
 function [stretchst stretchen stretchsrc stretchdst stretchden, fileprefix] = loadwavs(fnames, dirpath, nfiles)
 % loads a folder of wavs and sets up stretches
-% wrc 28Apr2016
+% wrc 10Jul2016
 
-dst = [];
-den = [];
-ren = [];
-rst = [];
-srcfile = [];
+%asks for the date format in the file names, the start index and the
+%experiment name because these are hard to figure out otherwise. if you
+%enter 0 for the start index of the file format then it just assigns
+%arbitrary dates. right now it considers each file a stretch. if you want
+%to bridge files with stretches add this functionality later or paste up
+%files.
 
 fnames{1} %print an example file so you can see what the indices are
+
 answer = inputdlg({'date format', 'start index', 'exp name'}, ...
                                    '', 1, {'yyyymmdd_HHMMSS', '', ''});
 dateformat = answer{1};
@@ -16,71 +18,63 @@ startindex = str2num(answer{2});
 fileprefix = answer{3};
 endindex = startindex + length(dateformat) - 1;
 
+rst = [];
+ren = [];
+dst = [];
+den = [];
+srcfile = [];
+stretch = [];
+    
 wb = waitbar(0, strcat('loading files:', ...
 num2str(0), '/', num2str(nfiles)));
+
 for fi = 1:nfiles
     currentfilename = fullfile(dirpath, fnames{fi});
     info = audioinfo(currentfilename);
     
-    dst_tmp = datenum(currentfilename(startindex:endindex), dateformat);
-    den_tmp = dst_tmp + info.Duration;
+    nclips = ceil(info.Duration / 300);
     fs = info.SampleRate;
-    nraw = ceil(info.Duration / 300);
     
-    sampnum = fix((den_tmp(1:end) - dst_tmp(1:end))*60*24*60*fs);
-    cumsamp  = sampnum * NaN;
-    
-    for i=1:nraw
-        cumsamp(i) = sum(sampnum(1:i));
+    if(startindex == 0)
+        startfiletime = 1;
+    else
+        startfiletime = datenum(fnames{fi}(startindex:endindex), dateformat);
     end
     
-    ren_tmp = cumsamp;
-    rst_tmp = ren_tmp - sampnum + 1;
-    
-    srcfile_tmp = repmat(fi, 1, nraw);
-    
-    dst = [dst dst_tmp];
-    den = [den den_tmp];
-    ren = [ren ren_tmp];
-    rst = [rst rst_tmp];
-    srcfile = [srcfile srcfile_tmp];
-    
-waitbar(fi/nfiles, wb, strcat('loading files:', ...
-num2str(fi), '/', num2str(nfiles)));
+    if(nclips == 1)
+        rst = [rst 1];
+        ren = [ren info.TotalSamples];
+        dst = [dst startfiletime];
+        den = [den dst(end) + info.Duration/60/60/24];
+        srcfile = [srcfile fi];
+    else
+        rst = [rst 1];
+        ren = [ren 300*fs];
+        dst = [dst startfiletime];
+        den = [den dst(end) + 300/60/60/24];
+        
+        srcfile = [srcfile fi];
+        
+        for i=2:nclips
+            rst = [rst ren(end) + 1];
+            dst = [dst den(end) + 1/60/60/24];
+            
+            if(i == nclips)
+                ren = [ren info.TotalSamples];
+                den = [den startfiletime + info.Duration/60/60/24]; 
+            else
+                ren = [ren rst(end) + 300*fs];
+                den = [den dst(end) + 300/60/60/24];
+            end
+            
+            srcfile = [srcfile fi];
+        end
+    end
 end
 
-nraw = length(dst);
-stretch     = nraw * NaN;
-curstretch  = 1;
-stretch(1)  = curstretch;
 
-
-% wb = waitbar(0, strcat('generating stretches:', ...
-% num2str(0), '/', num2str(nraw)));
-for i=2:nraw
-     ddif = dst(i) - den(i-1);
-     ddif_sec = round(ddif * 24 * 60 * 60);
-     
-     if ddif_sec ~= 0
-         curstretch = curstretch + 1;
-     else
-         dese = find(stretch == curstretch);
-         stretchdiff = den(i) - dst(dese(1));
-         stretchdiff_sec = round(stretchdiff * 24 * 60 * 60);
-         
-         if stretchdiff_sec > 300 % this is hardcoded as 5min fix that.
-             curstretch = curstretch + 1;
-         end
-     end
-     
-     stretch(i) = curstretch; 
-
-% if mod(i, 1000) == 0
-% waitbar(i/nraw, wb, strcat('generating stretches:', ...
-%num2str(i), '/', num2str(nraw)));
-% end
-end
-
+nraw = length(srcfile);
+stretch = srcfile;
 
 ustretch = unique(stretch);
 nstretch = length(ustretch);
