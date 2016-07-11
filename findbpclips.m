@@ -26,7 +26,7 @@ function findbpclips()
 %
 % x -- enter debug mode.
 %
-%last updated: 22Mar2016
+%last updated: 11Jul2016
 %~wrc
 
 
@@ -416,35 +416,40 @@ function [y, fs] = redraw()
 end
 
 function getjustbps()
-    dese = find(containsbp == 1);
-    stretchst   = stretchst(dese);
-    stretchen   = stretchen(dese);
-    stretchsrc  = stretchsrc(dese, :);
-    stretchdst  = stretchdst(dese);
-    stretchden  = stretchden(dese);
-    
-    nstretches  = length(stretchst);
-    containsbp  = containsbp(dese);
-    containsba  = containsba(dese);
-    
-    if ~isempty(callpos)
-        highend = length(callpos);
-        dese2 = dese(dese < highend);
-        callpos = callpos{dese2};
-    end
-    
-    if any(currentstretch == dese)
-        currentstretch = find(currentstretch == dese);
-    else
-        currentstretch = 1;
-    end
-    
-    [y, fs] = redraw();
+%     dese = find(containsbp == 1);
+%     stretchst   = stretchst(dese);
+%     stretchen   = stretchen(dese);
+%     stretchsrc  = stretchsrc(dese, :);
+%     stretchdst  = stretchdst(dese);
+%     stretchden  = stretchden(dese);
+%     
+%     nstretches  = length(stretchst);
+%     containsbp  = containsbp(dese);
+%     containsba  = containsba(dese);
+%     
+%     if ~isempty(callpos)
+%         highend = length(callpos);
+%         dese2 = dese(dese < highend);
+%         callpos = callpos{dese2};
+%     end
+%     
+%     if any(currentstretch == dese)
+%         currentstretch = find(currentstretch == dese);
+%     else
+%         currentstretch = 1;
+%     end
+%     
+%     [y, fs] = redraw();
 end
 
 function findfiles()        
     [fnames, dirpath, nfiles] = openall();
-    % xwav = isxwav(fnames);
+    xwav = isxwav(fnames);
+    
+    %loads a transfer function even if we don't have xwavs
+    %instead should only do this for xwavs and then when trying to
+    %calculate SNR should check to see if wav or xwav and do the right
+    %thing
     
     [tffile, tfpath] = uigetfile({'*.tf', 'transfer function'}, 'select a transfer function file', dirpath);
     if(dirpath == 0)
@@ -453,11 +458,11 @@ function findfiles()
         tf = load(fullfile(tfpath, tffile));
     end
     
-    %if(xwav)
+    if(xwav)
         [stretchst, stretchen, stretchsrc, stretchdst, stretchden, fileprefix] = loadxwavs(fnames, dirpath, nfiles);
-    %else
-    %    [stretchst, stretchen, stretchsrc, stretchdst, stretchden, fileprefix] = loadwavs(fnames, dirpath, nfiles);
-    %end
+    else
+        [stretchst, stretchen, stretchsrc, stretchdst, stretchden, fileprefix] = loadwavs(fnames, dirpath, nfiles);
+    end
     
     nstretches = length(stretchst);
     
