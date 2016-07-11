@@ -18,6 +18,10 @@ startindex = str2num(answer{2});
 fileprefix = answer{3};
 endindex = startindex + length(dateformat) - 1;
 
+if(startindex < 1 | startindex > length(fnames{1}) | endindex > length(fnames{1}))
+    startindex = 0;
+end
+
 rst = [];
 ren = [];
 dst = [];
@@ -70,30 +74,23 @@ for fi = 1:nfiles
             srcfile = [srcfile fi];
         end
     end
+    
+    waitbar(fi/nfiles, wb, strcat('loading files:', ...
+    num2str(fi), '/', num2str(nfiles)));
 end
 
 
 nraw = length(srcfile);
 stretch = srcfile;
+stretchst = rst;
+stretchen = ren;
+stretchdst = dst;
+stretchden = den;
 
-ustretch = unique(stretch);
-nstretch = length(ustretch);
- 
-stretchst = ustretch * NaN;
-stretchen = ustretch * NaN;
-stretchsrc = nan(nstretch, 2);
-stretchdst = nan(nstretch, 1);
-stretchden = nan(nstretch, 1);
- 
-for i=1:nstretch
-     curstretch = find(stretch == ustretch(i));
-     stretchst(i) = rst(curstretch(1));
-     stretchen(i) = ren(curstretch(end));
-     stretchsrc(i, 1) = srcfile(curstretch(1));
-     stretchsrc(i, 2) = srcfile(curstretch(end));
-     stretchdst(i) = dst(curstretch(1));
-     stretchden(i) = den(curstretch(end));
-end
+stretchsrc = nan(nraw, 2);
+stretchsrc(:, 1) = stretch;
+stretchsrc(:, 2) = stretch;
+
 close(wb);
 
 end
