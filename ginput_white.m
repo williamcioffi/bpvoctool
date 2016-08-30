@@ -118,7 +118,8 @@ b = [];
             b = [b;button]; %#ok<AGROW>
             
             hold on
-            drawfunction(out1(end), y(end), abs(how_many + 1));
+            %drawfunction(out1(end), y(end), abs(how_many + 1));
+            drawfunction(out1(end), y(end), button);
             hold off
             
         end
