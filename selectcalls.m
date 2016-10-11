@@ -1,4 +1,4 @@
-function [runningct, runningst, runningen] = selectcalls(y, fs, lookwindow, returnwindow)
+function [runningct, runningst, runningen, buttons] = selectcalls(y, fs, lookwindow, returnwindow)
 % SELECTCALLS functional version of viewclips
 % lookwindow and returnwindow are specified in samples
 %   last updated: 29Apr2016
@@ -12,6 +12,7 @@ nyq = fs / 2;
 runningct = [];
 runningst = [];
 runningen = [];
+buttons   = [];
 
 % make a filtered version of the clip to pull the call from
 f(1) = 15;
@@ -122,6 +123,7 @@ runningcount = 1;
             runningct = [runningct ct];
             runningst = [runningst st];
             runningen = [runningen en];
+            buttons   = [buttons button];
     %end
 %end
 
