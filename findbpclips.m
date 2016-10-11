@@ -2,9 +2,10 @@ function findbpclips()
 % FINDBPCLIPS this is a proto-app for measuring interpulse interval.
 % currently:
 %
-% f -- open a directory find all xwavs and split them into chuncks based on
-% contiuous stretches in duty cycled data. the current code does not deal
-% with continuous files.
+% f -- open a directory find all xwavs and split them into chuncks 
+% [stretches] based on
+% contiuous stretches in duty cycled data (tend to be about 5 minutes). 
+% if the whole xwav is continuous it splits it into 5 min stretches.
 %
 % s -- save a .mat file of all information
 % o -- open a .mat file of all information
@@ -36,45 +37,61 @@ function findbpclips()
 FILESEP = filesep;
 LOGTICKS = [10 15 30 100 500 1000];
 LINTICKS = [20 100 250 500 750 1000];
-f(1) = 15;
-f(2) = 30;
+f(1) = 15; %lower freq for fin whale calls
+f(2) = 30; %high freq for fin whale calls
 lookwin = 2;
 returnwin = 1/2;
 currentscale = 'log';
 currentticks = LOGTICKS;
-map = 'parula';   %parula is default
+map = 'parula';   %parula is default colormap
 contrastauto = 1;
-cmin = [];
+%contrast and brightness parameters
+cmin = []; 
 cmax = [];
 
-%some finances
 curname = '';
 bpname = '';
 baname = '';
-currentstretch = -1;
-containsbp = [];
-containsba = [];
-callpos = {};
-detectpos = {};
-callsnr = {};
+currentstretch = -1;        %current screen or 'stretch' tend to be 5 min, unless there is a discontinuity.
+containsbp = [];            %is there a bp in the stretch?
+containsba = [];            %is there a ba in the stretch?
+
+%these cell arrays represent information about marked calls by stretch. so
+%that each index represents one stretch and may contain a vector of
+%multiple calls in that stretch. callpos, callpos_marktype, and callsnr
+%shoudl all align to each other. detectpos works the same way but is for
+%calls imported from an xbat detector using loadxbatdetector function.
+callpos = {};               
+callpos_marktype = {};     
+detectpos = {};             
+callsnr = {};  
+
+%the following refer to the current stretch being displayed
 y = [];
 fs = [];
 nfft = [];
 win = [];
 adv = [];
 bits = [];
+
+%where the files were loaded from
 nfiles = 0;
 dirpath = '';
 fnames = {};
+
+%indexing keys to go between the stretch notation and the actual files and
+%positions where those stretches will be found.
 stretchst = [];
 stretchen = [];
 stretchsrc = [];
 stretchdst = [];
 stretchden = [];
+
 nstretches = 0;
-tf = [];
-clipplayer = [];
-fileprefix = [];
+
+transferfunction = [];
+clipplayer = []; %clipplayer which can be used to listen to the current stretch
+fileprefix = []; %set a prefix so clips can be saved with sensible filenames
 % xwav = NaN;
 
 
@@ -160,6 +177,7 @@ function keypress_callback(~, eventdata)
                     'containsbp',           ... 
                     'containsba',           ...
                     'callpos',              ...
+                    'callpos_marktype'      ...
                     'detectpos',            ...
                     'callsnr',              ...
                     'y',                    ...
@@ -183,14 +201,16 @@ function keypress_callback(~, eventdata)
                     }, 'savedsession');
             
         case 'm'
-             [tmpcalls, tmpst, tmpen] = selectcalls(y, fs, lookwin*fs, returnwin*fs);
+             [tmpcalls, tmpst, tmpen, buttons] = selectcalls(y, fs, lookwin*fs, returnwin*fs);
              callpos{currentstretch} = tmpcalls;
+             callpos_marktype{currentstretch} = buttons';
              seccalls = tmpcalls / fs;
              seccalls = sort(seccalls);
-             [seccalls' [0 (seccalls(2:end) - seccalls(1:(end - 1)))]']
+             [seccalls' [0 (seccalls(2:end) - seccalls(1:(end - 1)))]' buttons]
              
-             if ~isempty(tf)
-                [tmpsnr, ~, ~] = calcsnr(tmpst, tmpen, tf, y, fs, f, nfft, win, adv);
+             
+             if ~isempty(transferfunction)
+                [tmpsnr, ~, ~] = calcsnr(tmpst, tmpen, transferfunction, y, fs, f, nfft, win, adv);
                 callsnr{currentstretch} = tmpsnr;
                 tmpsnr'
              end
@@ -449,13 +469,14 @@ function findfiles()
     %loads a transfer function even if we don't have xwavs
     %instead should only do this for xwavs and then when trying to
     %calculate SNR should check to see if wav or xwav and do the right
-    %thing
+    %thing. doesn't check to see if the transfer function is legit.
     
     [tffile, tfpath] = uigetfile({'*.tf', 'transfer function'}, 'select a transfer function file', dirpath);
-    if(dirpath == 0)
-        error('did not select a file...');
+    if(tfpath == 0)
+        warning('did not select a transfer function. will not caclulate snr...');
+        transferfunction = [];
     else
-        tf = load(fullfile(tfpath, tffile));
+        transferfunction = load(fullfile(tfpath, tffile));
     end
     
     if(xwav)
@@ -478,6 +499,8 @@ function findfiles()
     [y, fs] = redraw();
 end
 
+
+%put this in a separate function file that takes parameters
 function loadxbatdetections()
 [xfile, xpath] = uigetfile({'*.mat'}, dirpath);
 
