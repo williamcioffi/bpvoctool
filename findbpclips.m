@@ -1,33 +1,53 @@
 function findbpclips()
-% FINDBPCLIPS this is a proto-app for measuring interpulse interval.
+% FINDBPCLIPS this is a proto-app for measuring bp calls.
 % currently:
 %
 % f -- open a directory find all xwavs and split them into chuncks 
-% [stretches] based on
-% contiuous stretches in duty cycled data (tend to be about 5 minutes). 
-% if the whole xwav is continuous it splits it into 5 min stretches.
+%(stretches) based on cpmtomis stretcjes om duty cycled data (tend to be
+% about 5 minutes). If the whole xwav is continuous it splits it into 5 min
+% stretches.
 %
-% s -- save a .mat file of all information
-% o -- open a .mat file of all information
+% s -- save a .mat file of all vars
+% o -- open a .mat file of all vars
+% z -- save a .wav of current stretch
+% p -- save a table of bp calls with info (currently disabled).
 %
 % m -- mark calls. looks from a second on either side of the click finds
 % the peak and saves that position in bppos{index};
 % d -- delete marked calls
 % q -- display marked calls
 %
+% b -- mark a stretch as containing at least one bp 20hz call.
+% n -- mark a stretch as containing at least one ba train.
+%
 % g -- go to a particular chunck (by index)
-% hjkl -- vim controls (sortof) j k go up and down one file h l go up and
-% down one containsbp
-% b -- mark a chunck as containing at least one bp 20hz call.
-% n -- mark a chunck as containing at least one ba train.
-% t -- load a file of times to mark those chuncks as bp.
-% p -- save a table of the calls.
+% hjkl -- vim controls (sort of) j k go up and down one stretch h l go up 
+% and down one containsbp
+%
+% t -- load a file of times to mark those stretches as containsbp.
+% y -- load xbat detections (currently disabled) and mark strestches as
+% containsbp
 %
 % i -- toggle the spectrogram display between log and linear.
 %
-% x -- enter debug mode.
+% x -- enter debug mode (keyboard).
 %
-%last updated: 11Jul2016
+% 1 -- play stretch on screen
+% 2 -- pause/resume playing stretch
+% 3 -- play at 10x speed (for bp calls)
+% 4 -- filter out high freq. and play at 10x speed (for bp calls)
+% 
+% 0 -- filter spectrogram for bp calls
+% r -- redraw current stretch
+% 9 -- a contrast/brightness preset I like for bp calls
+% 8 -- brighter
+% 7 -- darker
+% 6 -- more contrast
+% 5 -- less contrast
+%
+% c -- reset contrast and brightness to auto
+%
+%last updated: 13Feb2017
 %~wrc
 
 
@@ -161,44 +181,7 @@ function keypress_callback(~, eventdata)
                 audiowrite(fullfile(outpath, outfile), y, fs, 'BitsPerSample', bits);
             end
         case 's'
-            uisave({'f',                    ...
-                    'lookwin',              ...
-                    'returnwin',            ...
-                    'currentscale',         ...
-                    'currentticks',         ...
-                    'map',                  ...
-                    'contrastauto',         ...
-                    'cmin',                 ...
-                    'cmax',                 ...
-                    'curname',              ...
-                    'bpname',               ...
-                    'baname',               ...
-                    'currentstretch',       ...
-                    'containsbp',           ... 
-                    'containsba',           ...
-                    'callpos',              ...
-                    'callpos_marktype'      ...
-                    'detectpos',            ...
-                    'callsnr',              ...
-                    'y',                    ...
-                    'fs',                   ...
-                    'nfft',                 ...
-                    'win',                  ...
-                    'adv',                  ...
-                    'bits',                 ...
-                    'nfiles',               ...
-                    'dirpath',              ...
-                    'fnames',               ...
-                    'stretchst',            ...
-                    'stretchen',            ...
-                    'stretchsrc',           ...
-                    'stretchdst',           ...
-                    'stretchden',           ...
-                    'nstretches',           ...
-                    'tf',                   ...
-                    'clipplayer',           ...
-                    'fileprefix'            ...
-                    }, 'savedsession');
+            uisave();
             
         case 'm'
              [tmpcalls, tmpst, tmpen, buttons] = selectcalls(y, fs, lookwin*fs, returnwin*fs);
@@ -293,9 +276,7 @@ function keypress_callback(~, eventdata)
                 error('did not find file');
             end 
         case 'y'
-            %containsbp = [];
-            %detectpos = {};
-            loadxbatdetections();
+            %loadxbatdetections();
         case 'i'
             switch(currentscale)
                 case 'log'
