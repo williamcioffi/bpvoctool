@@ -57,8 +57,11 @@ min = [];
 sec = [];
 buttonclick = [];
 snr = [];
+stretchid = [];
 
+wb = waitbar(0, strcat('tabulating... ', num2str(0), '/', num2str(ndesehavecalls)));
 for i=1:ndesehavecalls
+waitbar(i/ndesehavecalls, wb, strcat('tabulating... ', num2str(i), '/', num2str(ndesehavecalls)));
     cur = desehavecalls(i);
     
     startdate = stretchdst(cur);
@@ -74,7 +77,10 @@ for i=1:ndesehavecalls
     
     buttonclick = [buttonclick callpos_marktype{cur}];
     snr = [snr callsnr{cur}];
+    
+    stretchid = [stretchid repmat(cur, 1, length(calldates))];
 end
+close(wb);
 
 datestrings = cellstr(datestrings);
 year        = str2num(year);
@@ -86,8 +92,9 @@ sec         = str2num(sec);
 
 buttonclick = buttonclick';
 snr         = snr';
+stretchid   = stretchid';
 
-tab = table(datestrings, year, month, day, hour, min, sec, buttonclick, snr);
+tab = table(datestrings, year, month, day, hour, min, sec, buttonclick, snr, stretchid);
 
 [fname, fpath] = uiputfile('*.csv', 'save call table', 'calltable.csv');
 writetable(tab, fullfile(fpath, fname));
