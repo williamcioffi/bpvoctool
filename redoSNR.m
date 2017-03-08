@@ -49,7 +49,9 @@ ndesehavecalls = length(desehavecalls);
 
 %start the megaloop going through stretches one by one
 
+wb = waitbar(0, strcat('calculating snr... ', num2str(0), '/', num2str(ndesehavecalls)));
 for i=1:ndesehavecalls
+waitbar(i/ndesehavecalls, wb, strcat('calculating snr... ', num2str(i), '/', num2str(ndesehavecalls)));
     currentstretch = desehavecalls(i);
     
     [y, fs] = loadstretch(stretchst(currentstretch), ...
@@ -63,27 +65,29 @@ for i=1:ndesehavecalls
     en = ct + returnwindow - 1;
     
     %makeing sure the window fits on the screen
-    if st(i) > length(y)
-        st(i) = length(y) - returnwindow*2;
-    end
+    for p=1:length(ct)
+        if st(p) > length(y)
+            st(p) = length(y) - returnwindow*2;
+        end
 
-    if en(i) > length(y)
-        en(i) = length(y);
-    end
+        if en(p) > length(y)
+            en(p) = length(y);
+        end
 
-    if st(i) < 1
-        st(i) = 1;
-    end
+        if st(p) < 1
+            st(p) = 1;
+        end
 
-    if en(i) < 1
-        en(i) = returnwindow*2;
+        if en(p) < 1
+            en(p) = returnwindow*2;
+        end
     end
     %end of making sure the window fits on the screen
-    
-    [tmpsnr, ~, ~] = calcsnr(st, en, transferfunction, y, fs, f, nfft, win, adv);
+    [tmpsnr, ~, ~] = calcsnr_nofig(st, en, transferfunction, y, fs, f, nfft, win, adv);
     callsnr{currentstretch} = tmpsnr;
     
 end
+close(wb);
 
 savedvars = {                         ...
                 f,                    ...
