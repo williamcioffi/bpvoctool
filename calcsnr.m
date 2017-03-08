@@ -36,14 +36,17 @@ function [snr, xxb, yy] = calcsnr(st, en, tf, y, fs, f, nfft, win, adv)
 % 
 % [ct, st, en] = selectcalls(y, fs);
 % 
-WINLENGTH = length(st(1):en(1));
+for i=1:length(st)
+    WINLENGTH(i) = length(st(i):en(i));
+end
 
 backwardst = st - WINLENGTH + 1;    % start of noise box
 backwarden = st;                    % end of noise box
 
 % check to make sure we have room to look behind for a noise box
-if(backwardst < 1)
-    backwardst = NaN;
+dese = find(backwardst < 1);
+if(length(dese) > 0)
+    backwardst(dese) = NaN;
 end
 
 yy = [f(1) f(2) f(2) f(1)]; % this is for drawing on the y axis
