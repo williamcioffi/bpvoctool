@@ -48,6 +48,7 @@ desehavecalls = cellfun(@isempty, callpos);
 desehavecalls = find(desehavecalls ~= 1);
 ndesehavecalls = length(desehavecalls);
 
+datenumbers = [];
 datestrings = [];
 year = [];
 month = [];
@@ -75,12 +76,15 @@ waitbar(i/ndesehavecalls, wb, strcat('tabulating... ', num2str(i), '/', num2str(
     min     = [min;     datestr(calldates, 'MM')   ];
     sec     = [sec;     datestr(calldates, 'SS')   ];
     
+    datenumbers = [datenumbers calldates];
     buttonclick = [buttonclick callpos_marktype{cur}];
     snr = [snr callsnr{cur}];
     
     stretchid = [stretchid repmat(cur, 1, length(calldates))];
 end
-close(wb);
+
+timedif = [NaN datenumbers(2:end) - datenumbers(1:(end-1))];
+timedif = timedif*24*60*60;
 
 datestrings = cellstr(datestrings);
 year        = str2num(year);
@@ -93,8 +97,11 @@ sec         = str2num(sec);
 buttonclick = buttonclick';
 snr         = snr';
 stretchid   = stretchid';
+timedif     = timedif';
 
-tab = table(datestrings, year, month, day, hour, min, sec, buttonclick, snr, stretchid);
+tab = table(datestrings, year, month, day, hour, min, sec, buttonclick, snr, stretchid, timedif);
+
+close(wb);
 
 [fname, fpath] = uiputfile('*.csv', 'save call table', 'calltable.csv');
 writetable(tab, fullfile(fpath, fname));
