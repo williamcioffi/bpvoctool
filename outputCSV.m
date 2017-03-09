@@ -52,7 +52,9 @@ pfs = [];
 tf = transferfunction;
 cal_freq = tf(:, 1);
 cal_dB = tf(:, 2);
-freqwin = 15:50 + 1;
+%freqwin = 15:50 + 1;
+lofreq = 12;
+hifreq = 50;
 
 %start the megaloop going through stretches one by one for peaks
 wb = waitbar(0, strcat('calculating peaks... ', num2str(0), '/', num2str(ndesehavecalls)));
@@ -92,9 +94,21 @@ waitbar(i/ndesehavecalls, wb, strcat('calculating peaks... ', num2str(i), '/', n
     
     for q=1:length(st)
         ys = y(st(q):en(q));
-
+        
+        nfft = fs; 
+        if(nfft > length(ys))
+            nfft = length(ys);
+        end
+        win = hann(nfft);
+        adv = nfft / 2;
+        
         [pxx fff] = pwelch(ys, win, adv, nfft, fs);
         pxx_db = 10*log10(pxx);
+        
+        [mm stf] = min(abs(fff - lofreq));
+        [mm enf] = min(abs(fff - hifreq));
+        freqwin = stf:enf;
+        
         %semilogx(fff, pxx_db);
 
         % interpolate the transfer function so that it matches the pxx
@@ -105,7 +119,7 @@ waitbar(i/ndesehavecalls, wb, strcat('calculating peaks... ', num2str(i), '/', n
 
         %find the peak
         [mm ii] = max(pxx_db_cal(freqwin));
-        peakfreq = freqwin(ii) - 1;
+        peakfreq = fff(freqwin(ii));
 
         pfs = [pfs peakfreq];
     end
