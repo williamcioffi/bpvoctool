@@ -83,9 +83,7 @@ waitbar(i/ndesehavecalls, wb, strcat('tabulating... ', num2str(i), '/', num2str(
     stretchid = [stretchid repmat(cur, 1, length(calldates))];
 end
 
-timedif = [NaN datenumbers(2:end) - datenumbers(1:(end-1))];
-timedif = timedif*24*60*60;
-
+%convert to nums or strings depending
 datestrings = cellstr(datestrings);
 year        = str2num(year);
 month       = str2num(month);
@@ -94,14 +92,36 @@ hour        = str2num(hour);
 min         = str2num(min);
 sec         = str2num(sec);
 
+%sort the datenums
+[datenumbers_sort oo] = sort(datenumbers);
+
+%calculate time differences
+timedif = [NaN datenumbers_sort(2:end) - datenumbers_sort(1:(end-1))];
+timedif = timedif*24*60*60;
+
+%sort everything
+datestrings = datestrings(oo);
+year        = year(oo);
+month       = month(oo);
+hour        = hour(oo);
+min         = min(oo);
+sec         = sec(oo);
+snr         = snr(oo);
+stretchid   = stretchid(oo);
+buttonclick = buttonclick(oo);
+
+%flip everything into n x 1 r x c.
 buttonclick = buttonclick';
 snr         = snr';
 stretchid   = stretchid';
 timedif     = timedif';
 
+%make a table
 tab = table(datestrings, year, month, day, hour, min, sec, buttonclick, snr, stretchid, timedif);
 
+%close the bar
 close(wb);
 
+%output the file
 [fname, fpath] = uiputfile('*.csv', 'save call table', 'calltable.csv');
 writetable(tab, fullfile(fpath, fname));
