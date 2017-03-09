@@ -48,6 +48,70 @@ desehavecalls = cellfun(@isempty, callpos);
 desehavecalls = find(desehavecalls ~= 1);
 ndesehavecalls = length(desehavecalls);
 
+pfs = [];
+tf = transferfunction;
+cal_freq = tf(:, 1);
+cal_dB = tf(:, 2);
+freqwin = 15:50 + 1;
+
+%start the megaloop going through stretches one by one for peaks
+wb = waitbar(0, strcat('calculating peaks... ', num2str(0), '/', num2str(ndesehavecalls)));
+for i=1:ndesehavecalls
+waitbar(i/ndesehavecalls, wb, strcat('calculating peaks... ', num2str(i), '/', num2str(ndesehavecalls)));
+    currentstretch = desehavecalls(i);
+    
+    [y, fs] = loadstretch(stretchst(currentstretch), ...
+                          stretchen(currentstretch), ...
+                          stretchsrc(currentstretch, :), ...
+                          dirpath, fnames);
+                      
+    returnwindow = returnwin*fs;
+    ct = callpos{currentstretch};
+    st = ct - returnwindow;
+    en = ct + returnwindow - 1;
+    
+    %makeing sure the window fits on the screen
+    for p=1:length(ct)
+        if st(p) > length(y)
+            st(p) = length(y) - returnwindow*2;
+        end
+
+        if en(p) > length(y)
+            en(p) = length(y);
+        end
+
+        if st(p) < 1
+            st(p) = 1;
+        end
+
+        if en(p) < 1
+            en(p) = returnwindow*2;
+        end
+    end
+    %end of making sure the window fits on the screen
+    
+    for q=1:length(st)
+        ys = y(st(q):en(q));
+
+        [pxx fff] = pwelch(ys, win, adv, nfft, fs);
+        pxx_db = 10*log10(pxx);
+        %semilogx(fff, pxx_db);
+
+        % interpolate the transfer function so that it matches the pxx
+        ptf = interp1(cal_freq, cal_dB, fff, 'linear', 'extrap');
+
+        % just add them together
+        pxx_db_cal = ptf + pxx_db;
+
+        %find the peak
+        [mm ii] = max(pxx_db_cal(freqwin));
+        peakfreq = freqwin(ii) - 1;
+
+        pfs = [pfs peakfreq];
+    end
+end
+close(wb);
+
 datenumbers = [];
 datestrings = [];
 year = [];
@@ -109,15 +173,17 @@ sec         = sec(oo);
 snr         = snr(oo);
 stretchid   = stretchid(oo);
 buttonclick = buttonclick(oo);
+peakfreqs   = pfs(oo);
 
 %flip everything into n x 1 r x c.
 buttonclick = buttonclick';
 snr         = snr';
 stretchid   = stretchid';
 timedif     = timedif';
+peakfreqs   = peakfreqs';
 
 %make a table
-tab = table(datestrings, year, month, day, hour, min, sec, buttonclick, snr, stretchid, timedif);
+tab = table(datestrings, year, month, day, hour, min, sec, buttonclick, snr, stretchid, peakfreqs, timedif);
 
 %close the bar
 close(wb);
