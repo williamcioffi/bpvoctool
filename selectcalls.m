@@ -1,4 +1,4 @@
-function [runningct, runningst, runningen, buttons] = selectcalls(y, fs, lookwindow, returnwindow)
+function [runningct, runningst, runningen, displayst, displayen, buttons] = selectcalls(y, fs, lookwindow, returnwindow)
 % SELECTCALLS functional version of viewclips
 % lookwindow and returnwindow are specified in samples
 %   last updated: 29Apr2016
@@ -81,14 +81,16 @@ runningcount = 1;
             end
             %end of checking to see if you clicked in the right place
 
-            xx = [st'   st'   en'   en'] ./ fs;
-            yy = [f(1) f(2) f(2) f(1)];
+            displayst = st;
+            displayen = en;
+%             xx = [st'   st'   en'   en'] ./ fs;
+%             yy = [f(1) f(2) f(2) f(1)];
 
             for i=1:count
                 %text(xx(i, 2), yy(2), num2str(runningcount), 'color', 'red');
-                hold on;
-                plot(xx(i,:), yy, 'r:');
-                hold off;
+%                 hold on;
+%                 plot(xx(i,:), yy, 'r:');
+%                 hold off;
 
                 runningcount = runningcount + 1;
 
@@ -128,27 +130,27 @@ runningcount = 1;
 %end
 
 % take a look at clips.
-
-nclips = length(runningct);
-part = ceil(sqrt(nclips));
-dims = [part part];
-difference = part^2 - nclips;
-
-if(difference >= part & part*(part - 1) >= nclips)
-    dims = [part - 1 part];
-end
-
-figure('position', [400 400 600 500]);
-for i=1:nclips
-    ytmp = yf(runningst(i):runningen(i));
-    
-    subplot(dims(1), dims(2), i);
-    plot(runningst(i):runningen(i), ytmp);
-    hold on;
-    text(0.05, 0.925, num2str(i), 'Units', 'normalized');
-    plot(runningct(i), 0, 'm*');
-    hold off
-end
-
-
-end
+% 
+% nclips = length(runningct);
+% part = ceil(sqrt(nclips));
+% dims = [part part];
+% difference = part^2 - nclips;
+% 
+% if(difference >= part & part*(part - 1) >= nclips)
+%     dims = [part - 1 part];
+% end
+% 
+% figure('position', [400 400 600 500]);
+% for i=1:nclips
+%     ytmp = yf(runningst(i):runningen(i));
+%     
+%     subplot(dims(1), dims(2), i);
+%     plot(runningst(i):runningen(i), ytmp);
+%     hold on;
+%     text(0.05, 0.925, num2str(i), 'Units', 'normalized');
+%     plot(runningct(i), 0, 'm*');
+%     hold off
+% end
+% 
+% 
+% end
