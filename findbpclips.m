@@ -84,7 +84,11 @@ containsba = [];            %is there a ba in the stretch?
 callpos = {};               
 callpos_marktype = {};     
 detectpos = {};             
-callsnr = {};  
+callsnr = {};
+callst = {};
+callen = {};
+calldisplayst = {};
+calldisplayen = {};
 
 %the following refer to the current stretch being displayed
 y = [];
@@ -157,17 +161,19 @@ function keypress_callback(~, eventdata)
         case 'q'
             if currentstretch <= length(callpos)
                 if ~isempty(callpos{currentstretch})
-                    hold on;
-                    plot(callpos{currentstretch}/fs, 25, '*');
-                    hold off;
+%                     hold on;
+%                     plot(callpos{currentstretch}/fs, 25, '*');
+%                     hold off;
+                    figure(fig);
+                    drawcallboxes(calldisplayst{currentstretch} ./ fs, calldisplayen{currentstretch} ./ fs);
                 end
             end
-        case 'w'
-            if currentstretch <= length(detectpos)
-                hold on;
-                plot(detectpos{currentstretch}/fs, 25, '*');
-                hold off;
-            end
+%         case 'w'
+%             if currentstretch <= length(detectpos)
+%                 hold on;
+%                 plot(detectpos{currentstretch}/fs, 25, '*');
+%                 hold off;
+%             end
         case 'f'
             findfiles();
         case 'o'
@@ -209,6 +215,10 @@ function keypress_callback(~, eventdata)
             transferfunction    = savedvars{35};
             clipplayer          = savedvars{36};
             fileprefix          = savedvars{37};
+            callst              = savedvars{38};
+            callen              = savedvars{39};
+            calldisplayst       = savedvars{40};
+            calldisplayen       = savedvars{41};
             
             [y, fs] = redraw();
         case 'z'
@@ -256,13 +266,26 @@ function keypress_callback(~, eventdata)
                         nstretches,           ...
                         transferfunction,     ...
                         clipplayer,           ...
-                        fileprefix            ...
+                        fileprefix,           ...
+                        callst,               ...
+                        callen,                ...
+                        calldisplayst,        ...
+                        calldisplayen         ...
                       };
                   uisave('savedvars', 'savedsession');          
-        case 'm'
-             [tmpcalls, tmpst, tmpen, buttons] = selectcalls(y, fs, lookwin*fs, returnwin*fs);
-             callpos{currentstretch} = tmpcalls;
-             callpos_marktype{currentstretch} = buttons';
+        case 'a'
+             [tmpcalls, tmpst, tmpen, tmpdisplayst, tmpdisplayen, buttons] = selectcalls(y, fs, lookwin*fs, returnwin*fs);
+             
+             callpos{currentstretch} = [callpos{currentstretch} tmpcalls];
+             callpos_marktype{currentstretch} = [callpos_marktype{currentstretch} buttons'];
+             callst{currentstretch} = [callst{currentstretch} tmpst];
+             callen{currentstretch} = [callen{currentstretch} tmpen];
+             calldisplayst{currentstretch} = [calldisplayst{currentstretch} tmpdisplayst];
+             calldisplayen{currentstretch} = [calldisplayen{currentstretch} tmpdisplayen];
+
+             redraw();
+             drawcallboxes(calldisplayst{currentstretch} ./ fs, calldisplayen{currentstretch} ./ fs);
+             
              seccalls = tmpcalls / fs;
              seccalls = sort(seccalls);
              [seccalls' [0 (seccalls(2:end) - seccalls(1:(end - 1)))]' buttons]
@@ -274,6 +297,30 @@ function keypress_callback(~, eventdata)
                 tmpsnr'
              end
              
+        case 'm'
+            [tmpcalls, tmpst, tmpen, tmpdisplayst, tmpdisplayen, buttons] = autoselectcalls(y, fs, lookwin*fs, returnwin*fs);
+            callpos{currentstretch} = tmpcalls;
+            callpos_marktype{currentstretch} = buttons';
+            callst{currentstretch} = tmpst;
+            callen{currentstretch} = tmpen;
+            calldisplayst{currentstretch} = tmpdisplayst;
+            calldisplayen{currentstretch} = tmpdisplayen;
+            
+            figure(fig);
+            redraw();
+            drawcallboxes(calldisplayst{currentstretch} ./ fs, calldisplayen{currentstretch} ./ fs);
+            
+            seccalls = tmpcalls / fs;
+            seccalls = sort(seccalls);
+            [seccalls' [0 (seccalls(2:end) - seccalls(1:(end - 1)))]' buttons]
+            
+            
+            if ~isempty(transferfunction)
+                [tmpsnr, ~, ~] = calcsnr(tmpst, tmpen, transferfunction, y, fs, f, nfft, win, adv);
+                callsnr{currentstretch} = tmpsnr;
+                tmpsnr'
+            end
+            
         case 'g'
             done = 0;
             while ~done
@@ -370,9 +417,30 @@ function keypress_callback(~, eventdata)
                 lcp = length(callpos{currentstretch});
             
                 if lcp ~= 0
-                    fprintf('deleted %i calls\n', lcp);
-                    callpos{currentstretch} = [];
-                    redraw();
+                    index = input('delete (index or a=all) ?> ', 's');
+                    
+                    if index == 'a'
+                        fprintf('deleted %i calls\n', lcp);
+                        callpos{currentstretch} = [];
+                        callst{currentstretch} = [];
+                        callen{currentstretch} = [];
+                        calldisplayst{currentstretch} = [];
+                        calldisplayen{currentstretch} = [];
+                        redraw();
+                    else
+                        index = str2num(index);
+                        if all(index > 0 & index <= lcp)
+                            fprintf('deleted call #%i\n', index);
+                            callpos{currentstretch}(index) = [];
+                            callst{currentstretch}(index) = [];
+                            callen{currentstretch}(index) = [];
+                            calldisplayst{currentstretch}(index) = [];
+                            calldisplayen{currentstretch}(index) = [];
+                            figure(fig);
+                            redraw();
+                            drawcallboxes(calldisplayst{currentstretch} ./ fs, calldisplayen{currentstretch} ./ fs);
+                        end
+                    end
                 else
                     fprintf('no calls to delete!\n');
                 end
