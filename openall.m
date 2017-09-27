@@ -9,6 +9,10 @@ function [fnames dirpath nfiles] = openall()
 %   last modified: 28Jan2016
 %   to do: formal exception handling
 %~wrc
+%
+% holy shit matlab 2017b (at least) did a crazy thing
+% where the dir listing is different. Now row 5 is isdir
+% before it was row 4. this reverses the behavior of existing code!
 
 fnames = [];
 nfiles = [];
@@ -24,7 +28,10 @@ files_cell = struct2cell(files);
 fnames = files_cell(1, :);
 
 %get rid of directories if there are any
-isdir = files_cell(4, :);
+%if using earlier versions of matlab this
+%should be row 4. don't worry about how this
+%is hard coded right now.
+isdir = files_cell(5, :);
 keeps = find(cellfun(@(x) x == 0, isdir) == 1);
 fnames = fnames(keeps);
 
