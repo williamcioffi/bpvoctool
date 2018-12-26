@@ -112,7 +112,7 @@ close(wb);
 
 
 
-% [S, F, T, P] = spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
+% [S, F, T, P] = spectrogram(y, win, adv, nfft, fs, 'yaxis');
 % colormap(map);
 % %colorbar off;
 % set(gca, 'YScale', 'log');

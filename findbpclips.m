@@ -478,7 +478,7 @@ function keypress_callback(~, eventdata)
             nyq = fs / 2;
             [b a] = butter(3, f/nyq);
             yf = filtfilt(b, a, y);
-            spectrogram_truthful_labels(yf, win, adv, nfft, fs, 'yaxis');
+            spectrogram(yf, win, adv, nfft, fs, 'yaxis');
             colormap(map);
 %           colorbar off;
             set(gca, 'YScale', currentscale);
@@ -552,7 +552,7 @@ function [y, fs] = redraw()
     win = hann(nfft);
     adv = nfft / 2;
     
-    spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
+    spectrogram(y, win, adv, nfft, fs, 'yaxis');
 %   colorbar off;
     colormap(map);
     setcontrast();

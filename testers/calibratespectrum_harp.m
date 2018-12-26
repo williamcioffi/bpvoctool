@@ -15,7 +15,7 @@ yf = filtfilt(b, a, y);
 nfft = fs;
 win = hann(nfft);
 adv = nfft / 2;
-spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
+spectrogram(y, win, adv, nfft, fs, 'yaxis');
 set(gca, 'YScale', 'log');
 
 

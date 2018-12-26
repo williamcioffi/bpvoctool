@@ -21,7 +21,7 @@ nfft = 2^(ceil(log2(fs))-1);
 win = hann(nfft);
 adv = nfft / 2;
 
-spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
+spectrogram(y, win, adv, nfft, fs, 'yaxis');
 colorbar off;
 set(gca, 'YScale', 'log');
 
@@ -31,7 +31,7 @@ f(2) = 30;
 [b a] = butter(3, f/nyq);
 yf = filtfilt(b, a, y);
 
-% spectrogram_truthful_labels(yf, win, adv, nfft, fs, 'yaxis');
+% spectrogram(yf, win, adv, nfft, fs, 'yaxis');
 % colorbar off;
 % set(gca, 'YScale', 'log');
 
@@ -91,7 +91,7 @@ if(difference >= part & part*(part - 1) >= nclips)
 end
 
 figure;
-spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
+spectrogram(y, win, adv, nfft, fs, 'yaxis');
 colorbar off;
 set(gca, 'YScale', 'log');
 

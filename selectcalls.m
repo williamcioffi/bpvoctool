@@ -23,7 +23,7 @@ yf = filtfilt(b, a, y);
 % don't need y anymore after make yf
 clear y;
 
-% spectrogram_truthful_labels(yf, win, adv, nfft, fs, 'yaxis');
+% spectrogram(yf, win, adv, nfft, fs, 'yaxis');
 % colorbar off;
 % set(gca, 'YScale', 'log');
 

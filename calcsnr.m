@@ -31,7 +31,7 @@ function [snr, xxb, yy] = calcsnr(st, en, tf, y, fs, f, nfft, win, adv)
 % nfft = fs;
 % win = hann(nfft);
 % adv = nfft / 2;
-% spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
+% spectrogram(y, win, adv, nfft, fs, 'yaxis');
 % set(gca, 'YScale', 'log');
 % 
 % [ct, st, en] = selectcalls(y, fs);
@@ -143,7 +143,7 @@ end
 % nfft = fs;
 % win = hann(nfft);
 % adv = nfft / 2;
-% spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
+% spectrogram(y, win, adv, nfft, fs, 'yaxis');
 % set(gca, 'YScale', 'log');
 % 
 % for i = 1:length(ct)

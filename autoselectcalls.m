@@ -22,7 +22,7 @@ f(2) = 30;
 yf = filtfilt(b, a, y);
 
 %calculate fft
-[~, ~, T, P] = spectrogram_truthful_labels(y, win, adv, nfft, fs, 'yaxis');
+[~, ~, T, P] = spectrogram(y, win, adv, nfft, fs, 'yaxis');
 p19 = P(20, :);
 p19norm = p19 ./ max(p19);
 
